@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVGnest Enhanced - Simple Integration Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        select, button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .stat {
+            display: inline-block;
+            margin-right: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        #bins {
+            margin-top: 20px;
+        }
+        .bin-container {
+            border: 2px solid #007bff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .bin-container h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>SVGnest Enhanced - Multi-Bin Optimization Demo</h1>
+    <p>This demonstrates the new optimization strategies while using the original SVGnest library.</p>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="strategy">Optimization Strategy:</label>
+            <select id="strategy">
+                <option value="balanced">Balanced (Default)</option>
+                <option value="minimize-bins">Minimize Bins</option>
+                <option value="minimize-area">Minimize Area</option>
+                <option value="minimize-waste">Minimize Waste</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Configuration:</label>
+            <div>
+                <label><input type="checkbox" id="useHoles"> Part-in-Part Nesting</label>
+                <label><input type="checkbox" id="exploreConcave"> Explore Concave Areas</label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <button id="startBtn">Start Nesting</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="compareBtn">Compare All Strategies</button>
+        </div>
+    </div>
+
+    <div class="results" id="results" style="display: none;">
+        <h2>Results</h2>
+        <div id="stats"></div>
+        <div id="bins"></div>
+    </div>
+
+    <!-- Load original SVGnest -->
+    <script src="../util/pathsegpolyfill.js"></script>
+    <script src="../util/matrix.js"></script>
+    <script src="../util/domparser.js"></script>
+    <script src="../util/clipper.js"></script>
+    <script src="../util/parallel.js"></script>
+    <script src="../util/geometryutil.js"></script>
+    <script src="../util/placementworker.js"></script>
+    <script src="../svgparser.js"></script>
+    <script src="../svgnest.js"></script>
+
+    <!-- Enhanced integration -->
+    <script type="module">
+        import { validateConfig, getFitnessWeights, BinOptimizationStrategy } from '../src/core/config.js';
+
+        // Get strategy weights
+        function getStrategyConfig(strategyName) {
+            const weights = getFitnessWeights(strategyName);
+            return {
+                binOptimization: strategyName,
+                fitnessWeights: weights
+            };
+        }
+
+        // Patch the original SvgNest to inject enhanced fitness
+        const originalLaunchWorkers = window.SvgNest.launchWorkers.bind(window.SvgNest);
+
+        let currentStrategy = 'balanced';
+        let currentWeights = getFitnessWeights(currentStrategy);
+
+        window.SvgNest.launchWorkers = function(tree, binPolygon, config, progressCallback, displayCallback) {
+            // Inject fitness weights
+            config.fitnessWeights = currentWeights;
+
+            // Wrap the display callback to show enhanced metrics
+            const enhancedDisplayCallback = function(svglist, efficiency, placed, total) {
+                // Calculate enhanced fitness
+                const binCount = svglist ? svglist.length : 0;
+                const fitness = binCount * currentWeights.binCount +
+                               (1 - efficiency) * currentWeights.binWidth;
+
+                // Show results
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat">
+                        <div class="stat-label">Strategy</div>
+                        <div class="stat-value" style="font-size: 16px">${currentStrategy}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Bins Used</div>
+                        <div class="stat-value">${binCount}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Efficiency</div>
+                        <div class="stat-value">${Math.round(efficiency * 100)}%</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Parts Placed</div>
+                        <div class="stat-value">${placed}/${total}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Fitness Score</div>
+                        <div class="stat-value">${fitness.toFixed(2)}</div>
+                    </div>
+                `;
+
+                // Display bins
+                const binsDiv = document.getElementById('bins');
+                binsDiv.innerHTML = '';
+                if (svglist) {
+                    svglist.forEach((svg, i) => {
+                        const container = document.createElement('div');
+                        container.className = 'bin-container';
+                        container.innerHTML = `<h3>Bin ${i + 1}</h3>`;
+                        container.appendChild(svg.cloneNode(true));
+                        binsDiv.appendChild(container);
+                    });
+                }
+
+                // Call original callback
+                if (displayCallback) {
+                    displayCallback(svglist, efficiency, placed, total);
+                }
+            };
+
+            return originalLaunchWorkers(tree, binPolygon, config, progressCallback, enhancedDisplayCallback);
+        };
+
+        // UI Event Handlers
+        document.getElementById('strategy').addEventListener('change', (e) => {
+            currentStrategy = e.target.value;
+            currentWeights = getFitnessWeights(currentStrategy);
+            console.log(`Strategy changed to: ${currentStrategy}`, currentWeights);
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            // Load demo SVG
+            const svg = window.SvgNest.parsesvg(getDemoSVG());
+            const container = document.createElement('div');
+            container.appendChild(svg);
+
+            // Select first element as bin
+            const bin = svg.querySelector('polygon, rect, path');
+            if (bin) {
+                window.SvgNest.setbin(bin);
+
+                // Configure
+                window.SvgNest.config({
+                    spacing: 2,
+                    rotations: 4,
+                    populationSize: 10,
+                    useHoles: document.getElementById('useHoles').checked,
+                    exploreConcave: document.getElementById('exploreConcave').checked
+                });
+
+                // Start
+                window.SvgNest.start(
+                    (progress) => {
+                        console.log(`Progress: ${Math.round(progress * 100)}%`);
+                    },
+                    null // Will be wrapped by enhanced callback
+                );
+
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+            }
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            window.SvgNest.stop();
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        });
+
+        document.getElementById('compareBtn').addEventListener('click', async () => {
+            const strategies = ['minimize-bins', 'minimize-area', 'balanced'];
+            console.log('Comparing strategies:', strategies);
+
+            for (const strategy of strategies) {
+                currentStrategy = strategy;
+                currentWeights = getFitnessWeights(strategy);
+                document.getElementById('strategy').value = strategy;
+
+                // Run for 3 seconds
+                document.getElementById('startBtn').click();
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                document.getElementById('stopBtn').click();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            console.log('Strategy comparison complete!');
+        });
+
+        // Demo SVG data
+        function getDemoSVG() {
+            return `<svg viewBox="0 0 500 500">
+                <rect x="0" y="0" width="500" height="500" fill="none" stroke="black"/>
+                <polygon points="50,50 100,50 100,100 50,100" fill="none" stroke="red"/>
+                <polygon points="120,50 170,50 170,100 120,100" fill="none" stroke="red"/>
+                <polygon points="190,50 240,50 240,100 190,100" fill="none" stroke="red"/>
+                <circle cx="280" cy="75" r="25" fill="none" stroke="red"/>
+                <polygon points="320,50 370,75 320,100" fill="none" stroke="red"/>
+            </svg>`;
+        }
+
+        console.log('SVGnest Enhanced Integration Ready!');
+        console.log('Current strategy:', currentStrategy);
+        console.log('Available strategies:', Object.values(BinOptimizationStrategy));
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "name": "@svgnest/core",
+  "version": "2.0.0",
+  "description": "SVGnest - Open source nesting library with multi-bin optimization",
+  "main": "dist/index.js",
+  "module": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "nesting",
+    "bin-packing",
+    "svg",
+    "optimization",
+    "cnc",
+    "laser-cutting"
+  ],
+  "author": "Jack Qiao",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup": "^4.9.0",
+    "vite": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./dist/index.js"
+    },
+    "./core": {
+      "import": "./src/core/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "util"
+  ]
+}
