@@ -1,13 +1,13 @@
 {
   "name": "svgnest",
   "version": "1.0.0",
-  "description": "SVG nesting tool",
-  "main": "index.html",
+  "type": "module",
+  "description": "SVG nesting tool - React version",
   "scripts": {
     "dev": "vite",
-    "test:multi-bin": "vite --config vite.config.js test/index.html",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:multi-bin": "vite --config vite.config.js test/index.html"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -16,11 +16,16 @@
   "devDependencies": {
     "vite": "^7.2.2",
     "esbuild": "^0.25.12",
-    "@vitejs/plugin-react": "^4.3.4"
+    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1"
   },
   "keywords": [
     "svg",
-    "nesting"
+    "nesting",
+    "react",
+    "cnc",
+    "laser"
   ],
   "author": "",
   "license": "MIT"

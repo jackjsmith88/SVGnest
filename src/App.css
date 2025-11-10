@@ -1,0 +1,318 @@
+/* Import the font CSS */
+@import url('/font/latolatinfonts.css');
+
+/* Copy the existing styles from style.css and adapt for React */
+body, html {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: normal 22px/1.4 'LatoLatinWeb', helvetica, arial, verdana, sans-serif;
+  background-color: #fff;
+  color: #8b8b8b;
+}
+
+a {
+  color: #3bb34a;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #55c960;
+  text-decoration: underline;
+}
+
+h1 {
+  font-size: 1.5em;
+  font-family: 'LatoLatinWebLight', helvetica, arial, verdana, sans-serif;
+  font-weight: normal;
+  margin: 1.5em 0 0.5em 0;
+  color: #617bb5;
+}
+
+h2 {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin: 0 0 0.5em 0;
+  color: #8498d1;
+}
+
+h3 {
+  font-size: 1em;
+  font-weight: bold;
+  margin: 1em 0 0.2em 0;
+  color: #8498d1;
+}
+
+#splash {
+  width: 28em;
+  margin: 8% auto 0 auto;
+}
+
+#splash .logo {
+  width: 50%;
+  margin: 0;
+  margin-left: 25%;
+  height: auto;
+}
+
+#splash h1 {
+  color: #37b34a;
+}
+
+#splash h1.title {
+  font-size: 3.5em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.subscript {
+  font-size: 0.75em;
+}
+
+#splash .subscript {
+  display: block;
+  color: #3bb34a;
+  font-size: 1.45em;
+  text-align: center;
+  font-style: normal;
+}
+
+.nav {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+
+.button {
+  display: block;
+  margin: 0 0.5em;
+  padding: 0.6em 2.4em;
+  background-color: #fff;
+  border-radius: 5em;
+  border: 2px solid #d7e9b7;
+  cursor: pointer;
+  color: #3bb34a;
+}
+
+/* Mode switcher styles */
+.mode-switcher {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.mode-tabs {
+  display: inline-flex;
+  background: #f0f0f0;
+  border-radius: 2em;
+  padding: 0.2em;
+  gap: 0.2em;
+}
+
+.mode-tab {
+  padding: 0.8em 1.5em;
+  border: none;
+  background: transparent;
+  color: #8b8b8b;
+  border-radius: 1.5em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-size: 0.9em;
+}
+
+.mode-tab.active {
+  background: #3bb34a;
+  color: white;
+  transform: scale(1.05);
+}
+
+.mode-tab:hover:not(.active) {
+  background: #e0e0e0;
+  color: #617bb5;
+}
+
+/* Multi-bin tester styles */
+.multibin-tester {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2em;
+}
+
+.multibin-controls {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 0.5em;
+  padding: 1.5em;
+  margin-bottom: 2em;
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+
+.control-group label {
+  font-weight: bold;
+  color: #617bb5;
+  margin-bottom: 0.3em;
+  font-size: 0.9em;
+}
+
+.control-group input {
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 0.3em;
+  font-family: inherit;
+}
+
+.button-row {
+  display: flex;
+  gap: 1em;
+  justify-content: center;
+}
+
+.button.start-button {
+  background: #3bb34a;
+  color: white;
+  border-color: #3bb34a;
+}
+
+.button.start-button:hover:not(:disabled) {
+  background: #55c960;
+  border-color: #55c960;
+}
+
+.button.start-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button.secondary {
+  background: #617bb5;
+  color: white;
+  border-color: #617bb5;
+}
+
+.button.secondary:hover {
+  background: #8498d1;
+  border-color: #8498d1;
+}
+
+/* Multi-bin results */
+.multibin-results {
+  margin-top: 2em;
+}
+
+.summary-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  background: #f0f8ff;
+  padding: 1em;
+  border-radius: 0.5em;
+  margin-bottom: 2em;
+  justify-content: center;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 0.5em;
+  min-width: 120px;
+}
+
+.stat-item strong {
+  display: block;
+  color: #617bb5;
+  font-size: 0.9em;
+}
+
+/* Bin container and visualizer */
+.bin-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2em;
+  margin: 2em 0;
+}
+
+.bin-item {
+  border: 1px solid #ddd;
+  border-radius: 0.5em;
+  padding: 1em;
+  background: white;
+  text-align: center;
+}
+
+.bin-item h3 {
+  margin-top: 0;
+  color: #3bb34a;
+  font-size: 1.1em;
+}
+
+.bin-svg {
+  width: 100%;
+  height: auto;
+  max-width: 400px;
+  max-height: 300px;
+  margin: 1em 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5em;
+  margin-top: 1em;
+  font-size: 0.85em;
+  text-align: left;
+}
+
+.stats div {
+  padding: 0.2em;
+}
+
+.stats strong {
+  color: #617bb5;
+}
+
+.message.error {
+  background: #ffebee;
+  border: 1px solid #f44336;
+  color: #c62828;
+  padding: 1em;
+  border-radius: 0.5em;
+  margin: 1em 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .control-row {
+    flex-direction: column;
+  }
+  
+  .mode-tabs {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .bin-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-stats {
+    flex-direction: column;
+  }
+}

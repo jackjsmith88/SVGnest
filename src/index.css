@@ -98,6 +98,39 @@ cursor: pointer;
 color: #3bb34a;
 }
 
+.button:hover {
+background-color: #d7e9b7;
+}
+
+.button.disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+.success {
+color: #3bb34a;
+}
+
+.error {
+color: #ff4444;
+}
+
+.animated.bounce {
+animation: bounce 1s;
+}
+
+@keyframes bounce {
+0%, 20%, 50%, 80%, 100% {
+  transform: translateY(0);
+}
+40% {
+  transform: translateY(-10px);
+}
+60% {
+  transform: translateY(-5px);
+}
+}
+
 .button a:hover{
 text-decoration: none;
 }

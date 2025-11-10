@@ -332,13 +332,11 @@
 			var p = new Parallel(nfpPairs, {
 				env: {
 					binPolygon: binPolygon,
-					searchEdges: config.exploreConcave,
-					useHoles: config.useHoles
-				},
-				evalPath: 'util/eval.js'
-			});
-			
-			p.require('matrix.js');
+				searchEdges: config.exploreConcave,
+				useHoles: config.useHoles
+			},
+			evalPath: 'eval.js'
+		});			p.require('matrix.js');
 			p.require('geometryutil.js');
 			p.require('placementworker.js');
 			p.require('clipper.js');
@@ -537,11 +535,9 @@
 				var p2 = new Parallel([placelist.slice(0)], {
 					env: {
 						self: worker
-					},
-					evalPath: 'util/eval.js'
-				});
-				
-				p2.require('json.js');
+				},
+				evalPath: 'eval.js'
+			});				p2.require('json.js');
 				p2.require('clipper.js');
 				p2.require('matrix.js');
 				p2.require('geometryutil.js');
