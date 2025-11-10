@@ -1,84 +1,102 @@
 /**
- * Multi-bin nesting utilities for testing
- * This is a simplified implementation for testing purposes
+ * Multi-bin nesting utilities for testing with DimensionShape integration
+ * This implementation focuses on 2D shape nesting optimization
  */
 
+import { DimensionShape } from './DimensionShape.js'
+
 /**
- * Create simple test shapes
+ * Create test shapes using DimensionShape class - only rectangles and L-shapes
+ * Generates shapes based on length/width dimensions for 2D nesting
  */
 export function createSimpleShapes(count, maxWidth, maxHeight) {
   const shapes = []
-  const shapeTypes = ['rect', 'circle']
+  const shapeTypes = ['rectangle', 'l-shape']
 
   for (let i = 0; i < count; i++) {
     const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)]
-
-    if (type === 'rect') {
-      const width = Math.random() * (maxWidth * 0.2) + 20
-      const height = Math.random() * (maxHeight * 0.2) + 20
-      shapes.push({
-        id: `shape-${i}`,
-        type: 'rect',
-        width,
-        height,
-        area: width * height
+    
+    if (type === 'rectangle') {
+      // Create rectangular shape
+      const length = Math.random() * (maxWidth * 0.4) + 50  // 50 to 40% of bin width
+      const width = Math.random() * (maxHeight * 0.3) + 30   // 30 to 30% of bin height
+      
+      const dimensionShape = DimensionShape.createRectangle(length, width, {
+        id: `rect-${i}`,
+        jobNumber: `JOB-${Math.floor(Math.random() * 1000)}`,
+        customerName: `Customer ${i + 1}`,
+        material: 'Material'
       })
-    } else if (type === 'circle') {
-      const radius = Math.random() * (Math.min(maxWidth, maxHeight) * 0.1) + 10
+      
       shapes.push({
         id: `shape-${i}`,
-        type: 'circle',
-        radius,
-        area: Math.PI * radius * radius
+        type: 'dimensionshape',
+        dimensionShape: dimensionShape,
+        // Properties for nesting compatibility
+        width: dimensionShape.boundingBox.width,
+        height: dimensionShape.boundingBox.height,
+        area: dimensionShape.actualArea,
+        boundingArea: dimensionShape.boundingBox.area,
+        efficiency: dimensionShape.efficiency,
+        description: dimensionShape.getDescription()
+      })
+      
+    } else if (type === 'l-shape') {
+      // Create L-shaped piece
+      const length = Math.random() * (maxWidth * 0.4) + 80   // 80 to 40% of bin width
+      const width = Math.random() * (maxHeight * 0.4) + 60   // 60 to 40% of bin height
+      const armLength = Math.random() * (length * 0.4) + length * 0.3  // 30-70% of length
+      const armWidth = Math.random() * (width * 0.4) + width * 0.3     // 30-70% of width
+      
+      const dimensionShape = DimensionShape.createLShape(length, width, armLength, armWidth, {
+        id: `lshape-${i}`,
+        jobNumber: `JOB-${Math.floor(Math.random() * 1000)}`,
+        customerName: `Customer ${i + 1}`,
+        material: 'Material'
+      })
+      
+      shapes.push({
+        id: `shape-${i}`,
+        type: 'dimensionshape',
+        dimensionShape: dimensionShape,
+        // Properties for nesting compatibility
+        width: dimensionShape.boundingBox.width,
+        height: dimensionShape.boundingBox.height,
+        area: dimensionShape.actualArea,
+        boundingArea: dimensionShape.boundingBox.area,
+        efficiency: dimensionShape.efficiency,
+        description: dimensionShape.getDescription()
       })
     }
   }
 
-  // Sort by area (largest first) for better packing
-  return shapes.sort((a, b) => b.area - a.area)
+  // Sort by bounding area (largest first) for better packing efficiency
+  return shapes.sort((a, b) => b.boundingArea - a.boundingArea)
 }
 
 /**
- * Simple collision detection
+ * Enhanced collision detection for DimensionShape instances
  */
 function checkCollision(shape1, shape2) {
-  // Simple bounding box collision for rectangles
-  if (shape1.type === 'rect' && shape2.type === 'rect') {
-    return !(
-      shape1.x + shape1.width < shape2.x ||
-      shape2.x + shape2.width < shape1.x ||
-      shape1.y + shape1.height < shape2.y ||
-      shape2.y + shape2.height < shape1.y
+  // Both shapes are DimensionShape-based
+  if (shape1.type === 'dimensionshape' && shape2.type === 'dimensionshape') {
+    // Use DimensionShape's built-in overlap detection
+    return shape1.dimensionShape.overlaps(
+      shape2.dimensionShape,
+      shape1.x || 0,
+      shape1.y || 0,  
+      shape2.x || 0,
+      shape2.y || 0
     )
   }
 
-  // Circle collision
-  if (shape1.type === 'circle' && shape2.type === 'circle') {
-    const dx = (shape1.x + shape1.radius) - (shape2.x + shape2.radius)
-    const dy = (shape1.y + shape1.radius) - (shape2.y + shape2.radius)
-    const distance = Math.sqrt(dx * dx + dy * dy)
-    return distance < (shape1.radius + shape2.radius)
-  }
-
-  // Mixed collision (rect-circle) - simplified
-  if (shape1.type === 'rect' && shape2.type === 'circle') {
-    const circleCenterX = shape2.x + shape2.radius
-    const circleCenterY = shape2.y + shape2.radius
-
-    // Check if circle center is inside rect bounds + radius
-    return (
-      circleCenterX + shape2.radius > shape1.x &&
-      circleCenterX - shape2.radius < shape1.x + shape1.width &&
-      circleCenterY + shape2.radius > shape1.y &&
-      circleCenterY - shape2.radius < shape1.y + shape1.height
-    )
-  }
-
-  if (shape1.type === 'circle' && shape2.type === 'rect') {
-    return checkCollision(shape2, shape1)
-  }
-
-  return false
+  // Fallback to bounding box collision for any non-DimensionShape types
+  return !(
+    shape1.x + shape1.width < shape2.x ||
+    shape2.x + shape2.width < shape1.x ||
+    shape1.y + shape1.height < shape2.y ||
+    shape2.y + shape2.height < shape1.y
+  )
 }
 
 /**
@@ -87,18 +105,15 @@ function checkCollision(shape1, shape2) {
 function canPlaceShape(bin, shape, x, y) {
   const placedShape = { ...shape, x, y }
 
-  // Check bin boundaries
-  if (shape.type === 'rect') {
+  // Check bin boundaries using the shape's bounding box
+  if (shape.type === 'dimensionshape') {
+    // Use DimensionShape bounding box dimensions
     if (x < 0 || y < 0 || x + shape.width > bin.width || y + shape.height > bin.height) {
       return false
     }
-  } else if (shape.type === 'circle') {
-    if (
-      x < 0 ||
-      y < 0 ||
-      x + shape.radius * 2 > bin.width ||
-      y + shape.radius * 2 > bin.height
-    ) {
+  } else {
+    // Fallback for any legacy shape types
+    if (x < 0 || y < 0 || x + shape.width > bin.width || y + shape.height > bin.height) {
       return false
     }
   }
@@ -165,13 +180,29 @@ export function testMultiBinNesting(bins, shapes) {
     }
   }
 
-  // Calculate statistics
+  // Calculate detailed statistics for CutShape-based nesting
   const binsUsed = bins.filter(bin => bin.shapes.length > 0).length
   const totalBinArea = bins.reduce((sum, bin) => sum + (bin.width * bin.height), 0)
-  const usedArea = bins.reduce((sum, bin) => {
-    return sum + bin.shapes.reduce((s, shape) => s + shape.area, 0)
+  
+  // Calculate both actual used area and bounding box area
+  const usedActualArea = bins.reduce((sum, bin) => {
+    return sum + bin.shapes.reduce((s, shape) => s + (shape.area || 0), 0)
   }, 0)
-  const efficiency = totalBinArea > 0 ? ((usedArea / totalBinArea) * 100).toFixed(1) : 0
+  
+  const usedBoundingArea = bins.reduce((sum, bin) => {
+    return sum + bin.shapes.reduce((s, shape) => s + (shape.boundingArea || shape.area || 0), 0)
+  }, 0)
+  
+  // Calculate material efficiency (how much of the cut material is actually used vs waste)
+  const totalMaterialEfficiency = shapes.reduce((sum, shape) => {
+    if (shape.type === 'cutshape') {
+      return sum + shape.efficiency
+    }
+    return sum + 1 // Non-CutShape shapes assumed 100% efficient
+  }, 0) / shapes.length
+  
+  const binEfficiency = totalBinArea > 0 ? ((usedBoundingArea / totalBinArea) * 100).toFixed(1) : 0
+  const materialEfficiency = (totalMaterialEfficiency * 100).toFixed(1)
 
   return {
     bins,
@@ -181,8 +212,83 @@ export function testMultiBinNesting(bins, shapes) {
     unplaced: unplacedShapes,
     binsUsed,
     totalBins: bins.length,
-    efficiency: parseFloat(efficiency)
+    binEfficiency: parseFloat(binEfficiency),
+    materialEfficiency: parseFloat(materialEfficiency),
+    usedActualArea,
+    usedBoundingArea,
+    totalBinArea,
+    // Legacy efficiency for backwards compatibility
+    efficiency: parseFloat(binEfficiency)
   }
+}
+
+/**
+ * Create realistic cutting scenarios
+ * @param {string} scenario - 'kitchen', 'office', 'mixed'
+ * @param {number} count - Number of cuts to generate
+ * @returns {Array} Array of DimensionShape-based test shapes
+ */
+export function createRealisticCuttingScenario(scenario = 'mixed', count = 10) {
+  const shapes = []
+  
+  if (scenario === 'kitchen') {
+    // Kitchen scenarios - more L-shapes for corners
+    for (let i = 0; i < count; i++) {
+      if (Math.random() < 0.6) { // 60% L-shapes for kitchen
+        const length = Math.random() * 300 + 150        // 150-450 units
+        const width = Math.random() * 200 + 100         // 100-300 units
+        const armLength = Math.random() * (length * 0.4) + length * 0.4  // 40-80% of length
+        const armWidth = Math.random() * (width * 0.4) + width * 0.4     // 40-80% of width
+        
+        const dimensionShape = DimensionShape.createLShape(length, width, armLength, armWidth, {
+          id: `kitchen-l-${i}`,
+          jobNumber: `K${Math.floor(Math.random() * 1000)}`,
+          material: 'Kitchen Material',
+          scenario: 'kitchen-corner'
+        })
+        
+        shapes.push({
+          id: `shape-${i}`,
+          type: 'dimensionshape',
+          dimensionShape,
+          width: dimensionShape.boundingBox.width,
+          height: dimensionShape.boundingBox.height,
+          area: dimensionShape.actualArea,
+          boundingArea: dimensionShape.boundingBox.area,
+          efficiency: dimensionShape.efficiency,
+          description: dimensionShape.getDescription()
+        })
+      } else {
+        // Straight runs
+        const length = Math.random() * 400 + 100  // 100-500 units
+        const width = Math.random() * 150 + 50    // 50-200 units
+        
+        const dimensionShape = DimensionShape.createRectangle(length, width, {
+          id: `kitchen-rect-${i}`,
+          jobNumber: `K${Math.floor(Math.random() * 1000)}`,
+          material: 'Kitchen Material',
+          scenario: 'kitchen-straight'
+        })
+        
+        shapes.push({
+          id: `shape-${i}`,
+          type: 'dimensionshape',
+          dimensionShape,
+          width: dimensionShape.boundingBox.width,
+          height: dimensionShape.boundingBox.height,
+          area: dimensionShape.actualArea,
+          boundingArea: dimensionShape.boundingBox.area,
+          efficiency: dimensionShape.efficiency,
+          description: dimensionShape.getDescription()
+        })
+      }
+    }
+  } else {
+    // Use the existing mixed generation
+    return createSimpleShapes(count, 400, 300) // Reasonable dimensions for testing
+  }
+  
+  return shapes.sort((a, b) => b.boundingArea - a.boundingArea)
 }
 
 /**

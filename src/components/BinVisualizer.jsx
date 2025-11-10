@@ -1,10 +1,16 @@
 function BinVisualizer({ bin, index }) {
   const { width, height, shapes } = bin
 
-  // Calculate utilization
+  // Calculate utilization with CutShape awareness
   const binArea = width * height
   const usedArea = shapes.reduce((sum, shape) => sum + (shape.area || 0), 0)
-  const utilization = binArea > 0 ? ((usedArea / binArea) * 100).toFixed(1) : 0
+  const usedBoundingArea = shapes.reduce((sum, shape) => sum + (shape.boundingArea || shape.area || 0), 0)
+  const utilization = binArea > 0 ? ((usedBoundingArea / binArea) * 100).toFixed(1) : 0
+  
+  // Calculate material efficiency (actual material used vs bounding box)
+  const materialEfficiency = shapes.length > 0 
+    ? ((usedArea / usedBoundingArea) * 100).toFixed(1) 
+    : 100
 
   // Generate random colors for shapes
   const getColor = (index) => {
@@ -40,7 +46,57 @@ function BinVisualizer({ bin, index }) {
 
         {/* Render shapes */}
         {shapes.map((shape, shapeIndex) => {
-          if (shape.type === 'rect') {
+          const color = getColor(shapeIndex)
+          
+          if (shape.type === 'dimensionshape' && shape.dimensionShape) {
+            // Render DimensionShape using its SVG elements
+            const svgElements = shape.dimensionShape.getSVGElements(shape.x || 0, shape.y || 0)
+            const cavityElements = shape.dimensionShape.getCavityElements(shape.x || 0, shape.y || 0)
+            
+            return (
+              <g key={shapeIndex}>
+                {/* Render main shape elements */}
+                {svgElements.map((element, elementIndex) => (
+                  <rect
+                    key={`element-${elementIndex}`}
+                    x={element.x}
+                    y={element.y}
+                    width={element.width}
+                    height={element.height}
+                    fill={color}
+                    fillOpacity="0.7"
+                    stroke={color}
+                    strokeWidth="1"
+                  />
+                ))}
+                
+                {/* Don't render cavities - they make L-shapes look confusing */}
+                
+                {/* Shape label showing type and efficiency */}
+                <text
+                  x={(shape.x || 0) + shape.dimensionShape.boundingBox.width / 2}
+                  y={(shape.y || 0) + shape.dimensionShape.boundingBox.height / 2}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="10"
+                  fill="#333"
+                  fontWeight="bold"
+                >
+                  {shape.dimensionShape.type === 'L_SHAPE' ? 'L' : 'R'}
+                </text>
+                <text
+                  x={(shape.x || 0) + shape.dimensionShape.boundingBox.width / 2}
+                  y={(shape.y || 0) + shape.dimensionShape.boundingBox.height / 2 + 12}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="8"
+                  fill="#666"
+                >
+                  {Math.round(shape.efficiency * 100)}%
+                </text>
+              </g>
+            )
+          } else if (shape.type === 'rect') {
             return (
               <rect
                 key={shapeIndex}
@@ -48,7 +104,7 @@ function BinVisualizer({ bin, index }) {
                 y={shape.y}
                 width={shape.width}
                 height={shape.height}
-                fill={getColor(shapeIndex)}
+                fill={color}
                 fillOpacity="0.7"
                 stroke="#333"
                 strokeWidth="1"
@@ -61,7 +117,7 @@ function BinVisualizer({ bin, index }) {
                 cx={shape.x + shape.radius}
                 cy={shape.y + shape.radius}
                 r={shape.radius}
-                fill={getColor(shapeIndex)}
+                fill={color}
                 fillOpacity="0.7"
                 stroke="#333"
                 strokeWidth="1"
@@ -72,7 +128,7 @@ function BinVisualizer({ bin, index }) {
               <polygon
                 key={shapeIndex}
                 points={shape.points}
-                fill={getColor(shapeIndex)}
+                fill={color}
                 fillOpacity="0.7"
                 stroke="#333"
                 strokeWidth="1"
@@ -85,9 +141,16 @@ function BinVisualizer({ bin, index }) {
 
       <div className="stats">
         <div><strong>Shapes:</strong> {shapes.length}</div>
-        <div><strong>Utilization:</strong> {utilization}%</div>
-        <div><strong>Used Area:</strong> {Math.round(usedArea)} px²</div>
-        <div><strong>Total Area:</strong> {binArea} px²</div>
+        <div><strong>Bin Utilization:</strong> {utilization}%</div>
+        <div><strong>Material Efficiency:</strong> {materialEfficiency}%</div>
+        <div><strong>Actual Area:</strong> {Math.round(usedArea)} px²</div>
+        <div><strong>Bounding Area:</strong> {Math.round(usedBoundingArea)} px²</div>
+        <div><strong>Bin Area:</strong> {binArea} px²</div>
+        <div className="shape-breakdown">
+          <small>
+            {shapes.map(shape => shape.dimensionShape?.type || 'Unknown').join(', ')}
+          </small>
+        </div>
       </div>
     </div>
   )

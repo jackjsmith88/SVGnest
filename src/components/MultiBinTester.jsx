@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import BinVisualizer from './BinVisualizer'
-import { testMultiBinNesting, createSimpleShapes } from '..//utils/multiBinNesting'
+import { testMultiBinNesting, createSimpleShapes, createRealisticCuttingScenario } from '..//utils/multiBinNesting'
 
 function MultiBinTester() {
   const [numBins, setNumBins] = useState(3)
   const [binWidth, setBinWidth] = useState(400)
   const [binHeight, setBinHeight] = useState(300)
   const [numShapes, setNumShapes] = useState(10)
+  const [scenario, setScenario] = useState('mixed')
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -27,8 +28,10 @@ function MultiBinTester() {
         })
       }
 
-      // Create test shapes
-      const shapes = createSimpleShapes(numShapes, binWidth, binHeight)
+      // Create test shapes using selected scenario
+      const shapes = scenario === 'kitchen' 
+        ? createRealisticCuttingScenario('kitchen', numShapes)
+        : createSimpleShapes(numShapes, binWidth, binHeight)
 
       // Test nesting
       const nestingResults = testMultiBinNesting(bins, shapes)
@@ -96,6 +99,17 @@ function MultiBinTester() {
               onChange={(e) => setNumShapes(parseInt(e.target.value))}
             />
           </div>
+
+          <div className="control-group">
+            <label>Cutting Scenario:</label>
+            <select
+              value={scenario}
+              onChange={(e) => setScenario(e.target.value)}
+            >
+              <option value="mixed">Mixed (Random L-shapes & Rectangles)</option>
+              <option value="kitchen">Kitchen (Realistic Worktops)</option>
+            </select>
+          </div>
         </div>
 
         <div className="button-row">
@@ -127,20 +141,39 @@ function MultiBinTester() {
           <h2>Multi-Bin Results</h2>
 
           <div className="summary-stats">
-            <div className="stat-item">
-              <strong>Total shapes:</strong> {results.totalShapes}
+            <div className="stat-group">
+              <h3>Nesting Results</h3>
+              <div className="stat-item">
+                <strong>Total shapes:</strong> {results.totalShapes}
+              </div>
+              <div className="stat-item">
+                <strong>Placed shapes:</strong> {results.placedShapes}
+              </div>
+              <div className="stat-item">
+                <strong>Unplaced shapes:</strong> {results.unplacedShapes}
+              </div>
+              <div className="stat-item">
+                <strong>Bins used:</strong> {results.binsUsed} / {results.totalBins}
+              </div>
             </div>
-            <div className="stat-item">
-              <strong>Placed shapes:</strong> {results.placedShapes}
-            </div>
-            <div className="stat-item">
-              <strong>Unplaced shapes:</strong> {results.unplacedShapes}
-            </div>
-            <div className="stat-item">
-              <strong>Bins used:</strong> {results.binsUsed} / {results.totalBins}
-            </div>
-            <div className="stat-item">
-              <strong>Overall efficiency:</strong> {results.efficiency}%
+            
+            <div className="stat-group">
+              <h3>Efficiency Metrics</h3>
+              <div className="stat-item">
+                <strong>Bin utilization:</strong> {results.binEfficiency || results.efficiency}%
+              </div>
+              <div className="stat-item">
+                <strong>Material efficiency:</strong> {results.materialEfficiency}%
+              </div>
+              <div className="stat-item">
+                <strong>Actual area used:</strong> {Math.round(results.usedActualArea || 0)} px²
+              </div>
+              <div className="stat-item">
+                <strong>Bounding area used:</strong> {Math.round(results.usedBoundingArea || 0)} px²
+              </div>
+              <div className="stat-item">
+                <strong>Total bin area:</strong> {Math.round(results.totalBinArea || 0)} px²
+              </div>
             </div>
           </div>
 
