@@ -9,6 +9,7 @@ import Configuration from './components/SingleBin/Configuration'
 import ProgressSidebar from './components/SingleBin/ProgressSidebar'
 import SVGDisplay from './components/SingleBin/SVGDisplay'
 import MultiBinTester from './components/MultiBinTester'
+import { ShapeControls } from './components/SingleBin/ShapeControls'
 
 // Hooks
 import { useScriptLoader } from './hooks/useScriptLoader'
@@ -69,8 +70,8 @@ function App() {
   }, [scriptsLoaded, loadingError])
 
   // Event handlers
-  const handleDemo = () => {
-    console.log('Demo button clicked')
+  const handleDemoLoad = (multiplier = 1) => {
+    console.log(`Loading demo with ${multiplier}x multiplier`)
     
     if (!scriptsLoaded) {
       setMessage('SVGnest not loaded yet. Please wait...')
@@ -82,17 +83,69 @@ function App() {
     const displayElement = displayRef.current
     if (displayElement && window.SvgNest) {
       try {
-        // Parse the SVG content like in the original
+        // Parse the SVG content
         const svg = window.SvgNest.parsesvg(displayElement.innerHTML)
+        
+        // Duplicate shapes based on multiplier
+        if (multiplier > 1) {
+          const shapes = []
+          const allElements = svg.querySelectorAll('*')
+          
+          // Find the bin element - it's typically the largest rect or has specific attributes
+          let binElement = null
+          const rects = svg.querySelectorAll('rect')
+          
+          // The bin is usually the largest rect or one without fill
+          rects.forEach(rect => {
+            const width = parseFloat(rect.getAttribute('width'))
+            const height = parseFloat(rect.getAttribute('height'))
+            // Bin is typically much larger (>400px) and has no fill or white fill
+            if (width > 400 || height > 300) {
+              binElement = rect
+            }
+          })
+          
+          allElements.forEach(el => {
+            const id = el.getAttribute('id')
+            // Skip the bin element and elements with 'bin' in their id
+            if (el === binElement || (id && id.toLowerCase().includes('bin'))) {
+              return
+            }
+            
+            if (el.tagName === 'polygon' || el.tagName === 'rect' || el.tagName === 'path' || el.tagName === 'polyline') {
+              shapes.push(el)
+            }
+          })
+          
+          console.log(`Found ${shapes.length} shapes, duplicating ${multiplier - 1} times`)
+          
+          // Clone shapes (multiplier - 1) times
+          let idCounter = shapes.length
+          shapes.forEach(shape => {
+            for (let i = 0; i < multiplier - 1; i++) {
+              const clone = shape.cloneNode(true)
+              const originalId = clone.getAttribute('id')
+              if (originalId) {
+                clone.setAttribute('id', `${originalId}-copy${i + 1}`)
+              } else {
+                clone.setAttribute('id', `shape-${idCounter++}`)
+              }
+              svg.appendChild(clone)
+            }
+          })
+          
+          console.log(`Total shapes after duplication: ${shapes.length * multiplier}`)
+        }
+        
         displayElement.innerHTML = ''
         displayElement.appendChild(svg)
         
         // Attach event listeners for SVG selection
         attachSvgListeners(svg)
         
-        setMessage('Click on the outline to use as the bin')
+        const totalShapes = svg.querySelectorAll('polygon, rect, path, polyline').length
+        setMessage(`Demo loaded with ${totalShapes} shapes. Click on the outline to use as the bin`)
         setMessageClass(MESSAGE_TYPES.SUCCESS)
-        console.log('Demo SVG parsed and listeners attached')
       } catch (e) {
         setMessage(e.toString())
         setMessageClass(MESSAGE_TYPES.ERROR)
@@ -101,6 +154,85 @@ function App() {
     }
     
     setShowSplash(false)
+  }
+
+  const handleCustomFileLoad = (svgContent, multiplier = 1) => {
+    console.log(`Loading custom SVG with ${multiplier}x multiplier`)
+    
+    if (!window.SvgNest) {
+      setMessage('SVGnest not loaded yet. Please wait...')
+      setMessageClass(MESSAGE_TYPES.ERROR)
+      return
+    }
+
+    const displayElement = displayRef.current
+    if (displayElement) {
+      try {
+        const svg = window.SvgNest.parsesvg(svgContent)
+        
+        // Duplicate shapes if needed
+        if (multiplier > 1) {
+          const shapes = []
+          const allElements = svg.querySelectorAll('*')
+          
+          // Find the bin element - it's typically the largest rect
+          let binElement = null
+          const rects = svg.querySelectorAll('rect')
+          
+          rects.forEach(rect => {
+            const width = parseFloat(rect.getAttribute('width'))
+            const height = parseFloat(rect.getAttribute('height'))
+            if (width > 400 || height > 300) {
+              binElement = rect
+            }
+          })
+          
+          allElements.forEach(el => {
+            const id = el.getAttribute('id')
+            // Skip the bin element and elements with 'bin' in their id
+            if (el === binElement || (id && id.toLowerCase().includes('bin'))) {
+              return
+            }
+            
+            if (el.tagName === 'polygon' || el.tagName === 'rect' || el.tagName === 'path' || el.tagName === 'polyline') {
+              shapes.push(el)
+            }
+          })
+          
+          let idCounter = shapes.length
+          shapes.forEach(shape => {
+            for (let i = 0; i < multiplier - 1; i++) {
+              const clone = shape.cloneNode(true)
+              const originalId = clone.getAttribute('id')
+              if (originalId) {
+                clone.setAttribute('id', `${originalId}-copy${i + 1}`)
+              } else {
+                clone.setAttribute('id', `shape-${idCounter++}`)
+              }
+              svg.appendChild(clone)
+            }
+          })
+        }
+        
+        displayElement.innerHTML = ''
+        displayElement.appendChild(svg)
+        
+        attachSvgListeners(svg)
+        
+        const totalShapes = svg.querySelectorAll('polygon, rect, path, polyline').length
+        setMessage(`Custom SVG loaded with ${totalShapes} shapes. Click on the outline to use as the bin`)
+        setMessageClass(MESSAGE_TYPES.SUCCESS)
+      } catch (e) {
+        setMessage(`Error loading SVG: ${e.toString()}`)
+        setMessageClass(MESSAGE_TYPES.ERROR)
+      }
+    }
+    
+    setShowSplash(false)
+  }
+
+  const handleDemo = () => {
+    handleDemoLoad(1)
   }
 
   const handleUpload = () => {
@@ -215,6 +347,14 @@ function App() {
           currentMode={currentMode} 
           onModeChange={setCurrentMode} 
         />
+
+        {currentMode === MODES.SINGLE_BIN && (
+          <ShapeControls
+            onShapeMultiplierChange={() => {}} // Not used - multiplier is passed on load
+            onFileLoad={handleCustomFileLoad}
+            onDemoLoad={handleDemoLoad}
+          />
+        )}
 
         <ProgressSidebar iterations={iterations} />
 

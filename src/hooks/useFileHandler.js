@@ -31,6 +31,7 @@ export const useFileHandler = ({ setMessage, setMessageClass, setBinSelected, at
           if (window.SvgNest && window.SvgNest.parsesvg) {
             try {
               const svg = window.SvgNest.parsesvg(displayElement.innerHTML)
+              
               displayElement.innerHTML = ''
               displayElement.appendChild(svg)
               

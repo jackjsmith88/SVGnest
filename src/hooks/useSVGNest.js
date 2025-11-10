@@ -64,15 +64,24 @@ export const useSVGNest = () => {
       return
     }
 
+    console.log(`renderSvg called: ${svglist.length} bin(s), ${placed}/${total} shapes placed`)
+
     if (binsRef.current) {
       binsRef.current.innerHTML = ''
 
       for (let i = 0; i < svglist.length; i++) {
-        if (svglist.length > 2) {
+        // Count shapes in this bin
+        const shapesInBin = svglist[i].querySelectorAll('g[transform]').length
+        console.log(`  Bin ${i + 1}: ${shapesInBin} shapes`)
+        
+        // Add grid class for multiple bins (2 or more)
+        if (svglist.length > 1) {
           svglist[i].setAttribute('class', 'grid')
         }
         binsRef.current.appendChild(svglist[i])
       }
+      
+      console.log(`All ${svglist.length} bins appended to DOM`)
     }
 
     const efficiencyDisplay = document.getElementById('info_efficiency')

@@ -494,6 +494,7 @@ float: left;
 width: 45%;
 margin-right: 5%;
 min-width: 20em;
+position: relative; /* Override the absolute positioning */
 }
 
 #bins svg *{

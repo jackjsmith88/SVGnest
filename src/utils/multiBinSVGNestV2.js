@@ -23,8 +23,8 @@ export function shapesToSVG(shapes, binWidth, binHeight) {
   console.log(`shapesToSVG: Converting ${shapes.length} shapes to SVG`)
   console.log(`Bin dimensions: ${binWidth}x${binHeight}`)
   
-  // Calculate scale factor: convert from mm to pixels to fit in bin
-  // Find max dimension from all shapes
+  // Check if shapes need scaling
+  // Find max dimension from all shapes (shapes are already in pixels)
   let maxShapeWidth = 0
   let maxShapeHeight = 0
   shapes.forEach(shape => {
@@ -34,13 +34,14 @@ export function shapesToSVG(shapes, binWidth, binHeight) {
     }
   })
   
-  // Scale to fit: use 80% of bin for safety margin
-  const scaleX = (binWidth * 0.8) / maxShapeWidth
-  const scaleY = (binHeight * 0.8) / maxShapeHeight
-  const scale = Math.min(scaleX, scaleY, 1) // Don't scale up, only down
+  // Only scale down if shapes are too large for the bin
+  // Leave a small margin (5px) for spacing, but don't over-scale
+  const scaleX = maxShapeWidth > (binWidth - 5) ? (binWidth - 5) / maxShapeWidth : 1
+  const scaleY = maxShapeHeight > (binHeight - 5) ? (binHeight - 5) / maxShapeHeight : 1
+  const scale = Math.min(scaleX, scaleY) // Use the most restrictive scale
   
-  console.log(`Shape dimensions (mm): max ${maxShapeWidth}x${maxShapeHeight}`)
-  console.log(`Scale factor: ${scale.toFixed(4)}`)
+  console.log(`Shape dimensions: max ${maxShapeWidth}x${maxShapeHeight}`)
+  console.log(`Scale factor: ${scale.toFixed(4)} ${scale === 1 ? '(no scaling needed)' : '(scaling down to fit)'}`)
   
   // Layout shapes in a grid to avoid overlapping in initial SVG
   // SVGnest needs to see each shape separately
@@ -323,8 +324,9 @@ export async function runMultiBinSVGNest(
         return null
       }).filter(s => s !== null)
       
-      // Use SVGnest's efficiency (based on bounding box tightness)
-      // Don't recalculate - SVGnest already provides the correct efficiency
+      // Calculate per-bin efficiency
+      // For multi-bin: use the OVERALL efficiency but understand it represents total utilization
+      // Individual bin efficiency isn't meaningful when bins can have different fill levels
       const binEfficiency = result.efficiency
       
       return {
@@ -334,7 +336,7 @@ export async function runMultiBinSVGNest(
         shapes: binShapes,
         svg: svgElement, // Keep as DOM element for UI
         placedCount: binShapes.length,
-        efficiency: binEfficiency,
+        efficiency: binEfficiency, // Overall efficiency across all bins
         iterations: result.iterations // Share total iterations across all bins
       }
     })

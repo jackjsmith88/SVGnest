@@ -148,9 +148,17 @@ function MultiBinTester() {
               svg: svg ? svg.outerHTML : null
             }
             
-            // Add to topSolutions and keep only top 3 by efficiency
+            // Add to topSolutions and keep only top 3
+            // Prioritize: 1) Fewer bins, 2) Higher efficiency
             report.topSolutions.push(solution)
-            report.topSolutions.sort((a, b) => b.efficiency - a.efficiency)
+            report.topSolutions.sort((a, b) => {
+              // First, prefer fewer bins
+              if (a.binsUsed !== b.binsUsed) {
+                return a.binsUsed - b.binsUsed
+              }
+              // If same bins, prefer higher efficiency
+              return b.efficiency - a.efficiency
+            })
             if (report.topSolutions.length > 3) {
               report.topSolutions = report.topSolutions.slice(0, 3)
             }
