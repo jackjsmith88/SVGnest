@@ -10,6 +10,7 @@ import ProgressSidebar from './components/SingleBin/ProgressSidebar'
 import SVGDisplay from './components/SingleBin/SVGDisplay'
 import MultiBinTester from './components/MultiBinTester'
 import { ShapeControls } from './components/SingleBin/ShapeControls'
+import CustomShapeBuilder from './components/SingleBin/CustomShapeBuilder'
 
 // Hooks
 import { useScriptLoader } from './hooks/useScriptLoader'
@@ -269,6 +270,96 @@ function App() {
     }
   }
 
+  const handleShapesGenerated = (svgString) => {
+    console.log('Custom shapes generated:', svgString.length, 'chars')
+    
+    if (!scriptsLoaded) {
+      setMessage('SVGnest not loaded yet. Please wait...')
+      setMessageClass(MESSAGE_TYPES.ERROR)
+      return
+    }
+    
+    try {
+      const displayElement = displayRef.current
+      if (!displayElement) {
+        setMessage('Display element not found')
+        setMessageClass(MESSAGE_TYPES.ERROR)
+        return
+      }
+
+      // First, clear everything and reset state
+      displayElement.innerHTML = ''
+      setBinSelected(false)
+      
+      // Stop any running nest
+      if (window.SvgNest && isWorking) {
+        window.SvgNest.stop()
+      }
+
+      // Parse the SVG string
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(svgString, 'image/svg+xml')
+      const svg = doc.documentElement
+
+      if (svg.tagName !== 'svg') {
+        setMessage('Invalid SVG generated')
+        setMessageClass(MESSAGE_TYPES.ERROR)
+        return
+      }
+
+      // Load into display first
+      displayElement.innerHTML = ''
+      displayElement.appendChild(svg)
+      
+      // Now let SvgNest parse it from the DOM
+      const parsedSvg = window.SvgNest.parsesvg(displayElement.innerHTML)
+      
+      // Replace with parsed version
+      displayElement.innerHTML = ''
+      displayElement.appendChild(parsedSvg)
+      
+      // The bin is the first polygon (created by ShapeBuilder)
+      const allElements = parsedSvg.querySelectorAll('polygon, rect, path, polyline')
+      console.log(`Total elements after parsing: ${allElements.length}`)
+      allElements.forEach((el, i) => {
+        const points = el.getAttribute('points')
+        if (points && i > 0 && i < 3) { // Log first 2 shapes to check dimensions
+          const coords = points.split(' ').map(p => p.split(',').map(Number))
+          const width = Math.max(...coords.map(p => p[0])) - Math.min(...coords.map(p => p[0]))
+          const height = Math.max(...coords.map(p => p[1])) - Math.min(...coords.map(p => p[1]))
+          console.log(`  [${i}] ${el.tagName} id="${el.getAttribute('id')}" width=${width.toFixed(2)}px height=${height.toFixed(2)}px`)
+        } else {
+          console.log(`  [${i}] ${el.tagName} id="${el.getAttribute('id')}"`)
+        }
+      })
+      
+      const binElement = allElements[0] // First element is always the bin
+      const totalShapes = allElements.length - 1 // Exclude bin
+      
+      // Automatically select the bin and mark it
+      if (binElement && window.SvgNest) {
+        binElement.setAttribute('class', 'bin')
+        window.SvgNest.setbin(binElement)
+        
+        // Force spacing to 0 for precise custom shapes with real-world dimensions
+        window.SvgNest.config({ spacing: 0 })
+        console.log('Set spacing to 0 for custom shapes')
+        
+        setBinSelected(true)
+        console.log('Auto-selected bin from custom shapes, total shapes:', totalShapes)
+      }
+      
+      attachSvgListeners(parsedSvg)
+      
+      setMessage(`Custom shapes loaded: ${totalShapes} shapes ready for nesting. Click Start to begin!`)
+      setMessageClass(MESSAGE_TYPES.SUCCESS)
+      setShowSplash(false)
+    } catch (e) {
+      setMessage(`Error loading custom shapes: ${e.toString()}`)
+      setMessageClass(MESSAGE_TYPES.ERROR)
+    }
+  }
+
   const handleConfigSave = (e) => {
     e.preventDefault()
     
@@ -349,11 +440,17 @@ function App() {
         />
 
         {currentMode === MODES.SINGLE_BIN && (
-          <ShapeControls
-            onShapeMultiplierChange={() => {}} // Not used - multiplier is passed on load
-            onFileLoad={handleCustomFileLoad}
-            onDemoLoad={handleDemoLoad}
-          />
+          <>
+            <ShapeControls
+              onShapeMultiplierChange={() => {}} // Not used - multiplier is passed on load
+              onFileLoad={handleCustomFileLoad}
+              onDemoLoad={handleDemoLoad}
+            />
+            
+            <CustomShapeBuilder 
+              onShapesGenerated={handleShapesGenerated}
+            />
+          </>
         )}
 
         <ProgressSidebar iterations={iterations} />

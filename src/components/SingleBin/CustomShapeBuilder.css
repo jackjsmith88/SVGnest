@@ -1,0 +1,178 @@
+.custom-shape-builder {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.custom-shape-builder h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 18px;
+  border-bottom: 2px solid #4CAF50;
+  padding-bottom: 10px;
+}
+
+.custom-shape-builder h4 {
+  margin: 0 0 15px 0;
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.custom-shape-builder .section {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.custom-shape-builder .form-group {
+  margin-bottom: 12px;
+}
+
+.custom-shape-builder .form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #555;
+  font-size: 13px;
+}
+
+.custom-shape-builder .form-group input,
+.custom-shape-builder .form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.custom-shape-builder .form-group input:focus,
+.custom-shape-builder .form-group select:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.custom-shape-builder .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.custom-shape-builder .btn-add,
+.custom-shape-builder .btn-generate,
+.custom-shape-builder .btn-clear {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.custom-shape-builder .btn-add {
+  background: #2196F3;
+  color: white;
+}
+
+.custom-shape-builder .btn-add:hover {
+  background: #1976D2;
+}
+
+.custom-shape-builder .btn-generate {
+  background: #4CAF50;
+  color: white;
+}
+
+.custom-shape-builder .btn-generate:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.custom-shape-builder .btn-generate:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.custom-shape-builder .btn-clear {
+  background: #f44336;
+  color: white;
+}
+
+.custom-shape-builder .btn-clear:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.custom-shape-builder .btn-clear:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.custom-shape-builder .shapes-list {
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.custom-shape-builder .shape-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.custom-shape-builder .shape-item:last-child {
+  margin-bottom: 0;
+}
+
+.custom-shape-builder .btn-remove {
+  background: #f44336;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-shape-builder .btn-remove:hover {
+  background: #d32f2f;
+}
+
+.custom-shape-builder .empty-message {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+.custom-shape-builder .actions {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+}
+
+.custom-shape-builder .actions button {
+  margin-top: 0;
+}
