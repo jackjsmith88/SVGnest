@@ -1,5 +1,5 @@
 {
-  "name": "svgnest",
+  "name": "svgnest-react",
   "version": "1.0.0",
   "type": "module",
   "description": "SVG nesting tool - React version",

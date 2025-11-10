@@ -1,7 +1,8 @@
 /**
  * Multi-Bin SVGnest Runner
- * Wraps the single-bin SVGnest algorithm to work across multiple bins
- * Uses iterative approach: pack bin 1, then bin 2 with remaining shapes, etc.
+ * Uses SVGnest's NATIVE multi-bin capability
+ * SVGnest automatically creates multiple bins via placementworker's while(paths.length > 0) loop
+ * Returns placement[] array with one element per bin
  */
 
 import { DimensionShape } from './DimensionShape.js'
@@ -108,70 +109,40 @@ export function shapesToSVG(shapes, binWidth, binHeight) {
 }
 
 /**
- * Run SVGnest once on a single bin with given shapes
- * Returns promise that resolves when complete or timeout
- */
-export function runSVGNestOnBin(shapes, binWidth, binHeight, timeoutSeconds = 30) {
-  return new Promise((resolve, reject) => {
-    if (!window.SvgNest) {
-      reject(new Error('SVGnest not loaded'))
-      return
-    }
-
-    // Convert shapes to SVG
-    const svgString = shapesToSVG(shapes, binWidth, binHeight)
-    
-    // Create a temporary container
-    const container = document.createElement('div')
-    container.innerHTML = svgString
-    container.style.display = 'none'
-    document.body.appendChild(container)
-    
-    const svgElement = container.querySelector('svg')
-    const binElement = container.querySelector('#bin')
-    
-    if (!svgElement || !binElement) {
-      document.body.removeChild(container)
-      reject(new Error('Failed to create SVG elements'))
-      return
-    }
-
-    try {
-      // Parse SVG with SVGnest
-      const parsed = window.SvgNest.parsesvg(svgElement.outerHTML)
-      
-      // Set bin
-      const parsedBin = parsed.querySelector('#bin')
-      if (parsedBin) {
-        window.SvgNest.setbin(parsedBin)
-      } else {
+ * Run multi-bin packing using SVGnest's NATIVE multi-bin capability
         throw new Error('Bin element not found after parsing')
       }
 
-      // Configure SVGnest settings
+      // Configure SVGnest settings for better packing
       window.SvgNest.config({
         spacing: 2, // 2px spacing between parts
-        rotations: 4, // Try 0°, 90°, 180°, 270°
-        populationSize: 10, // Genetic algorithm population size
-        mutationRate: 10, // Mutation rate for GA
-        useHoles: false, // Don't try to nest inside concave areas for now
-        exploreConcave: false // Don't explore concave pockets for simpler/faster packing
+        rotations: 4, // Try 0°, 90°, 180°, 270° (more angles = slower but better)
+        populationSize: 50, // Genetic algorithm population size (larger = better exploration, default is 10)
+        mutationRate: 50, // Mutation rate for GA (higher = more exploration)
+        useHoles: true, // Try to nest parts inside concave areas of other parts
+        exploreConcave: true // Explore concave pockets for better nesting
       })
 
       let bestResult = null
       let iterations = 0
+      let lastIterationSvg = null
+      let callbackCount = 0
 
       // Start SVGnest
       window.SvgNest.start(
         (progress) => {
-          // Progress callback
-          console.log(`Bin packing progress: ${Math.round(progress * 100)}%`)
+          // Progress callback - fires frequently as algorithm works
+          if (onProgress) {
+            onProgress(progress)
+          }
         },
         (svglist, efficiency, placedCount, totalCount) => {
-          // Display callback - called when better solution found
-          iterations++
+          // Display callback - called EVERY time an individual is evaluated
+          callbackCount++
           
           if (svglist && svglist.length > 0) {
+            // This is a new/better solution
+            iterations++
             bestResult = {
               svg: svglist[0],
               efficiency,
@@ -181,6 +152,25 @@ export function runSVGNestOnBin(shapes, binWidth, binHeight, timeoutSeconds = 30
               iterations
             }
             console.log(`SVGnest iteration ${iterations}: ${placedCount}/${totalCount} placed, ${(efficiency * 100).toFixed(1)}% efficiency`)
+            
+            if (onBestFound) {
+              onBestFound(svglist[0], efficiency, placedCount, totalCount, iterations)
+            }
+            
+            // Store for iteration updates
+            lastIterationSvg = svglist[0]
+            
+            // Send to iteration panel
+            if (onIterationUpdate) {
+              onIterationUpdate(svglist[0])
+            }
+          } else {
+            // No improvement - but still update iteration panel to show activity
+            // This fires VERY frequently (on every GA evaluation)
+            if (onIterationUpdate && lastIterationSvg) {
+              // Flash the last known solution to show the algorithm is working
+              onIterationUpdate(lastIterationSvg)
+            }
           }
         }
       )
@@ -255,7 +245,8 @@ function extractPlacedShapeIds(svg) {
 }
 
 /**
- * Run multi-bin packing using SVGnest iteratively
+ * Run multi-bin packing using SVGnest's NATIVE multi-bin capability
+ * SVGnest automatically creates multiple bins until all shapes are placed
  * This is the main entry point for multi-bin with SVGnest
  */
 export async function runMultiBinSVGNest(
@@ -263,85 +254,194 @@ export async function runMultiBinSVGNest(
   binWidth, 
   binHeight, 
   maxBins = 10,
-  timePerBin = 30,
-  onBinComplete = null
+  timeLimit = 30,
+  callbacks = {}
 ) {
-  const bins = []
-  let remainingShapes = [...shapes]
-  let binIndex = 0
+  const { onProgress, onBestFound, onIterationUpdate } = callbacks
+  
+  console.log(`\n=== Multi-Bin Packing with SVGnest (Native Mode) ===`)
+  console.log(`Shapes: ${shapes.length}, Bin: ${binWidth}x${binHeight}, Time: ${timeLimit}s`)
+  
+  // Create single SVG with ALL shapes
+  const svgString = shapesToSVG(shapes, binWidth, binHeight)
+  
+  // Initialize SvgNest in iframe
+  if (!window.SvgNest) {
+    throw new Error('SVGnest not loaded. Make sure svgnest.js is included.')
+  }
 
-  while (remainingShapes.length > 0 && binIndex < maxBins) {
-    console.log(`\n=== Packing Bin ${binIndex + 1} with ${remainingShapes.length} shapes ===`)
+  // Create iframe with SVG
+  const iframe = document.createElement('iframe')
+  iframe.style.display = 'none'
+  document.body.appendChild(iframe)
+
+  try {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+    iframeDoc.open()
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <script src="/geometryutil.js"></script>
+        <script src="/svgparser.js"></script>
+        <script src="/clipper.js"></script>
+        <script src="/parallel.js"></script>
+        <script src="/placementworker.js"></script>
+        <script src="/svgnest.js"></script>
+      </head>
+      <body>
+        <div id="select">${svgString}</div>
+      </body>
+      </html>
+    `)
+    iframeDoc.close()
+
+    // Wait for scripts to load
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const iframeWindow = iframe.contentWindow
+    if (!iframeWindow.SvgNest) {
+      throw new Error('SvgNest not available in iframe')
+    }
+
+    // Get bin element
+    const svg = iframeDoc.querySelector('#select svg')
+    const bin = iframeDoc.querySelector('#bin')
     
-    try {
-      const result = await runSVGNestOnBin(
-        remainingShapes,
-        binWidth,
-        binHeight,
-        timePerBin
+    if (!svg || !bin) {
+      throw new Error('SVG or bin element not found after parsing')
+    }
+
+    // Configure SVGnest for multi-bin optimization
+    iframeWindow.SvgNest.config({
+      spacing: 2,
+      rotations: 4, 
+      populationSize: 50,
+      mutationRate: 50,
+      useHoles: true,
+      exploreConcave: true
+    })
+
+    let bestResult = null
+    let iterations = 0
+    let callbackCount = 0
+    let startTime = Date.now()
+
+    // Promise wrapper for SVGnest
+    const nestPromise = new Promise((resolve, reject) => {
+      // Auto-stop timer
+      const stopTimer = setTimeout(() => {
+        console.log(`Time limit reached (${timeLimit}s)`)
+        iframeWindow.SvgNest.stop()
+        resolve(bestResult)
+      }, timeLimit * 1000)
+
+      // Start SVGnest with ALL shapes - it will create multiple bins automatically
+      iframeWindow.SvgNest.start(
+        (progress) => {
+          if (onProgress) {
+            onProgress(progress)
+          }
+        },
+        (svglist, efficiency, placedCount, totalCount) => {
+          // Called whenever a new/better solution is found
+          callbackCount++
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(2)
+          
+          if (svglist && svglist.length > 0) {
+            // NEW SOLUTION FOUND
+            iterations++
+            
+            // svglist is an ARRAY - one SVG per bin!
+            const binsUsed = svglist.length
+            
+            console.log(`[${elapsed}s] Iteration ${iterations}: ${placedCount}/${totalCount} placed in ${binsUsed} bin(s), ${(efficiency * 100).toFixed(1)}% efficiency`)
+            
+            bestResult = {
+              svglist: svglist, // Array of SVG elements (one per bin)
+              binsUsed: binsUsed,
+              efficiency: efficiency,
+              placedCount: placedCount,
+              totalCount: totalCount,
+              unplacedCount: totalCount - placedCount,
+              iterations: iterations,
+              callbacks: callbackCount,
+              elapsed: parseFloat(elapsed)
+            }
+            
+            if (onBestFound) {
+              onBestFound(svglist, efficiency, placedCount, totalCount, iterations, binsUsed)
+            }
+          }
+          
+          // Always send iteration update (even if null = no improvement yet)
+          if (onIterationUpdate) {
+            onIterationUpdate(svglist)
+          }
+        }
       )
-
-      if (result.placedCount === 0) {
-        console.warn(`No shapes fit in bin ${binIndex + 1}. Stopping.`)
-        break
+      
+      // Handle stop event
+      iframeWindow.SvgNest.onstop = () => {
+        clearTimeout(stopTimer)
+        resolve(bestResult)
       }
+    })
 
-      // Store bin result
-      const binResult = {
+    const result = await nestPromise
+
+    if (!result) {
+      throw new Error('No solution found')
+    }
+
+    // Parse multi-bin results
+    const bins = result.svglist.map((svgElement, binIndex) => {
+      // Extract placed shapes from this bin's SVG
+      const binShapes = []
+      const groups = svgElement.querySelectorAll('g[transform]')
+      
+      groups.forEach(group => {
+        const shapeElement = group.querySelector('[id^="shape-"]')
+        if (shapeElement) {
+          const id = shapeElement.id
+          const shapeIndex = parseInt(id.replace('shape-', ''))
+          
+          if (shapeIndex >= 0 && shapeIndex < shapes.length) {
+            binShapes.push({
+              ...shapes[shapeIndex],
+              binAssigned: binIndex,
+              transform: group.getAttribute('transform')
+            })
+          }
+        }
+      })
+      
+      return {
         binIndex,
         width: binWidth,
         height: binHeight,
-        shapes: result.placedShapes.map((shape, idx) => ({
-          ...shape,
-          // SVGnest handles positioning, we'll extract from SVG if needed
-          binAssigned: binIndex
-        })),
-        svg: result.svg,
-        efficiency: result.efficiency,
-        placedCount: result.placedCount,
-        iterations: result.iterations
+        shapes: binShapes,
+        svg: svgElement.outerHTML,
+        placedCount: binShapes.length
       }
+    })
 
-      bins.push(binResult)
-
-      // Notify caller
-      if (onBinComplete) {
-        onBinComplete(binResult, binIndex, bins)
-      }
-
-      // Update remaining shapes
-      remainingShapes = result.unplacedShapes
-      binIndex++
-
-      console.log(`Bin ${binIndex} complete: ${result.placedCount} shapes placed, ${result.unplacedCount} remaining`)
-
-    } catch (error) {
-      console.error(`Error packing bin ${binIndex + 1}:`, error)
-      
-      // If no solution found, it means remaining shapes don't fit
-      // This is not really an error, just means we're done
-      if (error.message === 'No solution found') {
-        console.log(`Remaining ${remainingShapes.length} shapes do not fit in available bins`)
-      }
-      
-      break
+    const totalPlaced = bins.reduce((sum, bin) => sum + bin.placedCount, 0)
+    
+    return {
+      bins,
+      binsUsed: result.binsUsed,
+      totalShapes: shapes.length,
+      placedShapes: totalPlaced,
+      unplacedShapes: shapes.length - totalPlaced,
+      binEfficiency: result.efficiency * 100,
+      iterations: result.iterations,
+      callbacks: result.callbacks,
+      elapsed: result.elapsed
     }
-  }
 
-  // Calculate overall statistics
-  const totalPlaced = bins.reduce((sum, bin) => sum + bin.placedCount, 0)
-  const totalBinArea = bins.length * binWidth * binHeight
-  const overallEfficiency = bins.reduce((sum, bin) => sum + bin.efficiency, 0) / bins.length
-
-  return {
-    bins,
-    binsUsed: bins.length,
-    totalBins: maxBins,
-    totalShapes: shapes.length,
-    placedShapes: totalPlaced,
-    unplacedShapes: shapes.length - totalPlaced,
-    binEfficiency: overallEfficiency * 100,
-    totalBinArea,
-    unplaced: remainingShapes
+  } finally {
+    // Cleanup
+    document.body.removeChild(iframe)
   }
 }

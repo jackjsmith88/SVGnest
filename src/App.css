@@ -339,6 +339,74 @@ h3 {
   margin-top: 2em;
 }
 
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.exec-report-btn {
+  background: #617bb5;
+  color: white;
+  border: 2px solid #617bb5;
+  padding: 0.6em 1.2em;
+  font-size: 0.9em;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.exec-report-btn:hover {
+  background: #8498d1;
+  border-color: #8498d1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(97, 123, 181, 0.3);
+}
+
+.exec-report-btn.copied {
+  background: #3bb34a;
+  border-color: #3bb34a;
+}
+
+.execution-summary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5em;
+  border-radius: 0.5em;
+  margin-bottom: 1.5em;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.execution-summary h3 {
+  margin: 0 0 1em 0;
+  color: white;
+  font-size: 1.1em;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1em;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.summary-item .label {
+  font-size: 0.85em;
+  opacity: 0.9;
+  font-weight: normal;
+}
+
+.summary-item .value {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #fff;
+}
+
 .summary-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -582,5 +650,180 @@ h3 {
     min-width: 100px;
     padding: 0.5em 1.5em;
     font-size: 0.9em;
+  }
+}
+
+/* Live packing visualization */
+.live-packing-view {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.packing-header {
+  background: linear-gradient(135deg, #617bb5 0%, #8498d1 100%);
+  color: white;
+  padding: 1.5em;
+  border-radius: 0.5em 0.5em 0 0;
+  text-align: center;
+}
+
+.packing-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-size: 1.5em;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.packing-stats {
+  margin-top: 0.5em;
+  font-size: 0.9em;
+  opacity: 0.9;
+  display: flex;
+  gap: 0.5em;
+  justify-content: center;
+}
+
+.packing-visualization {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2em;
+  padding: 2em;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 0 0 0.5em 0.5em;
+}
+
+.viz-panel {
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 0.5em;
+  overflow: hidden;
+}
+
+.viz-panel h3 {
+  background: #617bb5;
+  color: white;
+  margin: 0;
+  padding: 0.8em;
+  text-align: center;
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+
+.iteration-counter {
+  font-size: 0.8em;
+  opacity: 0.7;
+  font-family: monospace;
+}
+
+.svg-container {
+  position: relative;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  padding: 1em;
+}
+
+.svg-container svg {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #eee;
+}
+
+.best-placement {
+  background: #f0f8f0;
+}
+
+.current-iteration {
+  background: #f8f8f0;
+  transition: background-color 0.1s ease;
+}
+
+.current-iteration.flash-even {
+  background: #fffef0;
+}
+
+.current-iteration.flash-odd {
+  background: #f8f8f0;
+}
+
+.current-iteration.pulse {
+  animation: pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); opacity: 0.95; }
+  100% { transform: scale(1); }
+}
+
+.working-indicator {
+  position: relative;
+}
+
+.working-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(97, 123, 181, 0.9);
+  color: white;
+  padding: 0.5em 1em;
+  border-radius: 0.3em;
+  font-size: 0.9em;
+  font-weight: bold;
+  animation: fadeInOut 1s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.placeholder {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 2em;
+}
+
+.placement-stats {
+  position: absolute;
+  bottom: 1em;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.5em 1em;
+  border-radius: 1em;
+  font-size: 0.85em;
+  display: flex;
+  gap: 0.5em;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .packing-visualization {
+    grid-template-columns: 1fr;
   }
 }
