@@ -8,9 +8,13 @@ function Configuration({ visible, onSave }) {
         <h3>Space between parts</h3>
         <span className="tooltip" title="The space between parts in SVG units">?</span>
 
-        <input type="text" defaultValue="0.3" data-config="curveTolerance" />
+  <input type="text" defaultValue="0.3" data-config="curveTolerance" />
         <h3>Curve tolerance</h3>
         <span className="tooltip" title="The maximum error allowed when converting Beziers and arcs to line segments">?</span>
+
+  <input type="text" defaultValue="10000000" data-config="clipperScale" />
+  <h3>Clipper scale</h3>
+  <span className="tooltip" title="Internal precision multiplier used by the Clipper geometry engine">?</span>
 
         <input type="text" defaultValue="4" data-config="rotations" />
         <h3>Part rotations</h3>

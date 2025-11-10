@@ -95,6 +95,17 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
     }
   }
   
+  const getPreviewSVG = () => {
+    if (shapes.length === 0) return null
+    
+    const preset = binPreset === 'CUSTOM'
+      ? { binWidthCm: customBinWidth, binHeightCm: customBinHeight }
+      : PRESETS[binPreset]
+    
+    const builder = new ShapeBuilder(preset.binWidthCm, preset.binHeightCm)
+    return builder.shapesToSVG(shapes)
+  }
+  
   const handleClearShapes = () => {
     setShapes([])
   }
@@ -246,6 +257,17 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
           )}
         </div>
       </div>
+      
+      {/* Preview */}
+      {shapes.length > 0 && (
+        <div className="section">
+          <h4>Preview</h4>
+          <div 
+            className="preview-container"
+            dangerouslySetInnerHTML={{ __html: getPreviewSVG() }}
+          />
+        </div>
+      )}
       
       {/* Actions */}
       <div className="section actions">

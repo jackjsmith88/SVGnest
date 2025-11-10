@@ -178,17 +178,23 @@ export class ShapeBuilder {
   }
   
   /**
-   * Convert shape to SVG polygon element string
+   * Convert shape to SVG polygon element string with label
    * @param {Object} shape - Shape object from create methods
    * @param {number} offsetX - X offset in pixels
    * @param {number} offsetY - Y offset in pixels
+   * @param {number} index - Shape index for labeling
    */
-  shapeToSVGPolygon(shape, offsetX = 0, offsetY = 0) {
+  shapeToSVGPolygon(shape, offsetX = 0, offsetY = 0, index = 0) {
     const pointsStr = shape.points
       .map(p => `${(p.x + offsetX).toFixed(2)},${(p.y + offsetY).toFixed(2)}`)
       .join(' ')
     
-    return `<polygon id="${shape.id}" points="${pointsStr}" fill="none" stroke="#010101" stroke-miterlimit="10"/>`
+    // Calculate center for text label
+    const centerX = offsetX + (Math.max(...shape.points.map(p => p.x)) / 2)
+    const centerY = offsetY + (Math.max(...shape.points.map(p => p.y)) / 2)
+    
+    return `<polygon id="${shape.id}" points="${pointsStr}" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="2"/>
+    <text x="${centerX}" y="${centerY}" font-size="24" font-weight="bold" fill="#1976D2" text-anchor="middle" dominant-baseline="middle">${index + 1}</text>`
   }
   
   /**
@@ -207,23 +213,26 @@ export class ShapeBuilder {
   shapesToSVG(shapes) {
     // Position shapes in a grid layout for initial display
     // SVGnest will repack them, but this prevents overlapping in the preview
-    let x = 0
-    let y = 0
-    let rowHeight = 0
-    const margin = 5
+  let x = 0
+  let y = 0
+  let rowHeight = 0
+  const margin = 0
     
     const shapeSVGs = shapes.map((shape, index) => {
       const shapeWidth = Math.max(...shape.points.map(p => p.x))
       const shapeHeight = Math.max(...shape.points.map(p => p.y))
       
-      // Wrap to next row if needed
-      if (x + shapeWidth > this.binWidthPx && x > 0) {
+      // Wrap to next row if the NEXT position would exceed bin width
+      // Use a small tolerance to handle floating-point accumulation
+      const nextX = x + shapeWidth
+      if (nextX > this.binWidthPx + 0.1 && x > 0) {
+        console.log(`Wrapping at shape ${index}: currentX=${x.toFixed(2)}, nextX would be=${nextX.toFixed(2)}, binWidth=${this.binWidthPx}`)
         x = 0
         y += rowHeight + margin
         rowHeight = 0
       }
       
-      const svg = this.shapeToSVGPolygon(shape, x, y)
+      const svg = this.shapeToSVGPolygon(shape, x, y, index)
       
       x += shapeWidth + margin
       rowHeight = Math.max(rowHeight, shapeHeight)
@@ -236,12 +245,7 @@ export class ShapeBuilder {
     // Log the shapes being generated
     console.log(`Creating SVG with ${shapes.length} shapes`)
     
-    // Make SVG canvas 3x wider to accommodate preview layout
-    // Bin stays at correct size, but shapes can spread out for visibility
-    const svgWidth = this.binWidthPx * 3
-    const svgHeight = this.binHeightPx * 2
-    
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${this.binWidthPx}" height="${this.binHeightPx}" viewBox="0 0 ${this.binWidthPx} ${this.binHeightPx}">
       ${binSVG}
       ${shapeSVGs.join('\n      ')}
     </svg>`

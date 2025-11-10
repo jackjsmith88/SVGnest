@@ -176,3 +176,23 @@
 .custom-shape-builder .actions button {
   margin-top: 0;
 }
+
+.custom-shape-builder .preview-container {
+  width: 100%;
+  max-height: 400px;
+  overflow: auto;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-shape-builder .preview-container svg {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  background: white;
+}

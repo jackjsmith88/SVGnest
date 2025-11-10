@@ -31,6 +31,9 @@ function App() {
   const [zoomLevel, setZoomLevel] = useState(1.0)
   const [message, setMessage] = useState('')
   const [messageClass, setMessageClass] = useState('')
+  const [customShapesLoaded, setCustomShapesLoaded] = useState(false)
+  const [nestingStarted, setNestingStarted] = useState(false)
+  const [showCustomBuilder, setShowCustomBuilder] = useState(false)
 
   // File input ref
   const fileInputRef = useRef(null)
@@ -253,11 +256,14 @@ function App() {
   const handleStart = () => {
     if (isWorking) {
       stopNest()
+      setNestingStarted(false)
     } else {
       const result = startNest()
       if (!result.success) {
         setMessage(result.message)
         setMessageClass(MESSAGE_TYPES.ERROR)
+      } else {
+        setNestingStarted(true)
       }
     }
   }
@@ -349,11 +355,42 @@ function App() {
         console.log('Auto-selected bin from custom shapes, total shapes:', totalShapes)
       }
       
+      // Re-apply colors and numbers to shapes (lost during parsing)
+      allElements.forEach((el, i) => {
+        if (i === 0) return // Skip bin
+        
+        // Set shape colors
+        el.setAttribute('fill', 'rgba(33, 150, 243, 0.3)')
+        el.setAttribute('stroke', '#2196F3')
+        el.setAttribute('stroke-width', '2')
+        
+        // Add number label
+        const points = el.getAttribute('points')
+        if (points) {
+          const coords = points.split(' ').map(p => p.split(',').map(Number))
+          const centerX = coords.reduce((sum, p) => sum + p[0], 0) / coords.length
+          const centerY = coords.reduce((sum, p) => sum + p[1], 0) / coords.length
+          
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+          text.setAttribute('x', centerX)
+          text.setAttribute('y', centerY)
+          text.setAttribute('font-size', '24')
+          text.setAttribute('font-weight', 'bold')
+          text.setAttribute('fill', '#1976D2')
+          text.setAttribute('text-anchor', 'middle')
+          text.setAttribute('dominant-baseline', 'middle')
+          text.textContent = i
+          
+          parsedSvg.appendChild(text)
+        }
+      })
+      
       attachSvgListeners(parsedSvg)
       
       setMessage(`Custom shapes loaded: ${totalShapes} shapes ready for nesting. Click Start to begin!`)
       setMessageClass(MESSAGE_TYPES.SUCCESS)
       setShowSplash(false)
+      setCustomShapesLoaded(true)
     } catch (e) {
       setMessage(`Error loading custom shapes: ${e.toString()}`)
       setMessageClass(MESSAGE_TYPES.ERROR)
@@ -441,30 +478,59 @@ function App() {
 
         {currentMode === MODES.SINGLE_BIN && (
           <>
-            <ShapeControls
-              onShapeMultiplierChange={() => {}} // Not used - multiplier is passed on load
-              onFileLoad={handleCustomFileLoad}
-              onDemoLoad={handleDemoLoad}
-            />
+            {!showCustomBuilder && (
+              <ShapeControls
+                onShapeMultiplierChange={() => {}} // Not used - multiplier is passed on load
+                onFileLoad={handleCustomFileLoad}
+                onDemoLoad={handleDemoLoad}
+              />
+            )}
             
-            <CustomShapeBuilder 
-              onShapesGenerated={handleShapesGenerated}
-            />
+            <button 
+              onClick={() => setShowCustomBuilder(!showCustomBuilder)}
+              style={{
+                margin: '10px 20px',
+                padding: '10px 20px',
+                backgroundColor: showCustomBuilder ? '#f44336' : '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              {showCustomBuilder ? 'Hide Custom Shape Builder' : 'Show Custom Shape Builder'}
+            </button>
+            
+            {showCustomBuilder && (
+              <CustomShapeBuilder 
+                onShapesGenerated={handleShapesGenerated}
+              />
+            )}
           </>
         )}
 
         <ProgressSidebar iterations={iterations} />
 
-        {currentMode === MODES.SINGLE_BIN ? (
-          <SVGDisplay ref={displayRef} />
-        ) : (
+        {currentMode === MODES.MULTI_BIN && (
           <MultiBinTester />
+        )}
+
+        {!showCustomBuilder && currentMode === MODES.SINGLE_BIN && (
+          <SVGDisplay ref={displayRef} />
+        )}
+        
+        {showCustomBuilder && (
+          <div style={{ display: 'none' }}>
+            <SVGDisplay ref={displayRef} />
+          </div>
         )}
 
         <div 
           id="bins" 
           ref={binsRef} 
-          style={{ display: currentMode === MODES.SINGLE_BIN ? 'block' : 'none' }}
+          style={{ display: currentMode === MODES.SINGLE_BIN && nestingStarted && !showCustomBuilder ? 'block' : 'none' }}
         ></div>
 
         <input
