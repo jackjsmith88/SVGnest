@@ -99,6 +99,40 @@ li {
   border: 2px solid #d7e9b7;
   cursor: pointer;
   color: #3bb34a;
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  background-color: #3bb34a;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 179, 74, 0.2);
+}
+
+.button.active {
+  background-color: #3bb34a;
+  color: #fff;
+  border-color: #3bb34a;
+}
+
+/* FAQ Modal Styles - Bootstrap handles most styling */
+.faq-content h5 {
+  color: #617bb5 !important;
+  font-weight: 600;
+  margin-top: 1.5rem;
+}
+
+.faq-content p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.faq-content a {
+  text-decoration: none;
+}
+
+.faq-content a:hover {
+  text-decoration: underline;
 }
 
 /* Mode switcher styles */
@@ -297,6 +331,47 @@ li {
   margin: 1em 0;
 }
 
+/* Mode Switcher Styles */
+.mode-switcher {
+  display: flex;
+  justify-content: center;
+  padding: 1em 0;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.mode-tabs {
+  display: flex;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mode-tab {
+  padding: 12px 24px;
+  border: none;
+  background-color: transparent;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mode-tab:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.mode-tab.active {
+  background-color: #3bb34a;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 179, 74, 0.3);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .control-row {
@@ -306,6 +381,11 @@ li {
   .mode-tabs {
     flex-direction: column;
     width: 100%;
+  }
+  
+  .mode-tab {
+    width: 100%;
+    text-align: center;
   }
   
   .bin-container {
