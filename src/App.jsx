@@ -46,13 +46,15 @@ function App() {
     binsRef,
     startNest,
     stopNest,
-    handleDownload
+    handleDownload,
+    attachSvgListeners
   } = useSVGNest()
 
   const { handleFileChange, handleDragOver, handleDrop } = useFileHandler({
     setMessage,
     setMessageClass,
-    setBinSelected
+    setBinSelected,
+    attachSvgListeners
   })
 
   // Set initial message based on script loading
@@ -79,12 +81,23 @@ function App() {
     // Load demo SVG
     const displayElement = displayRef.current
     if (displayElement && window.SvgNest) {
-      // Demo SVG is already in the SVGDisplay component
-      console.log('Setting bin with SVGnest:', window.SvgNest)
-      window.SvgNest.setbin(displayElement)
-      setBinSelected(true)
-      setMessage('Demo loaded! Click Start Nest to begin.')
-      setMessageClass(MESSAGE_TYPES.SUCCESS)
+      try {
+        // Parse the SVG content like in the original
+        const svg = window.SvgNest.parsesvg(displayElement.innerHTML)
+        displayElement.innerHTML = ''
+        displayElement.appendChild(svg)
+        
+        // Attach event listeners for SVG selection
+        attachSvgListeners(svg)
+        
+        setMessage('Click on the outline to use as the bin')
+        setMessageClass(MESSAGE_TYPES.SUCCESS)
+        console.log('Demo SVG parsed and listeners attached')
+      } catch (e) {
+        setMessage(e.toString())
+        setMessageClass(MESSAGE_TYPES.ERROR)
+        return
+      }
     }
     
     setShowSplash(false)

@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-export const useFileHandler = ({ setMessage, setMessageClass, setBinSelected }) => {
+export const useFileHandler = ({ setMessage, setMessageClass, setBinSelected, attachSvgListeners }) => {
   
   const handleFile = useCallback((file) => {
     if (!file) {
@@ -27,16 +27,29 @@ export const useFileHandler = ({ setMessage, setMessageClass, setBinSelected }) 
           displayElement.innerHTML = content
           console.log('SVG content set to display element')
           
-          // Set bin using SvgNest
-          if (window.SvgNest && window.SvgNest.setbin) {
-            console.log('Setting bin with SVGnest:', window.SvgNest)
-            window.SvgNest.setbin(displayElement)
-            setBinSelected(true)
-            setMessage('SVG loaded successfully! Click Start Nest to begin.')
-            setMessageClass('success')
+          // Parse the SVG and attach listeners like in the original code
+          if (window.SvgNest && window.SvgNest.parsesvg) {
+            try {
+              const svg = window.SvgNest.parsesvg(displayElement.innerHTML)
+              displayElement.innerHTML = ''
+              displayElement.appendChild(svg)
+              
+              // Attach event listeners for SVG selection
+              if (attachSvgListeners) {
+                attachSvgListeners(svg)
+              }
+              
+              setMessage('Click on the outline to use as the bin')
+              setMessageClass('success')
+              console.log('SVG parsed and listeners attached')
+            } catch (parseError) {
+              console.error('Error parsing SVG:', parseError)
+              setMessage('Error parsing SVG file: ' + parseError.toString())
+              setMessageClass('error animated bounce')
+            }
           } else {
-            console.error('SvgNest.setbin not available')
-            setMessage('Error: SVGnest setbin function not available')
+            console.error('SvgNest.parsesvg not available')
+            setMessage('Error: SVGnest parse function not available')
             setMessageClass('error animated bounce')
           }
         }

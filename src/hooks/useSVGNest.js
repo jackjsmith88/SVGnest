@@ -99,6 +99,41 @@ export const useSVGNest = () => {
     setDownloadReady(true)
   }, [])
 
+  const attachSvgListeners = useCallback((svg) => {
+    // attach event listeners for SVG selection
+    for (let i = 0; i < svg.childNodes.length; i++) {
+      const node = svg.childNodes[i]
+      if (node.nodeType === 1) { // Element node
+        node.onclick = function() {
+          const display = displayRef.current
+          if (display && display.className.includes('disabled')) {
+            return
+          }
+          
+          // Remove active class from previously selected element
+          const currentbin = document.querySelector('#select .active')
+          if (currentbin) {
+            const className = currentbin.getAttribute('class').replace('active', '').trim()
+            if (!className) {
+              currentbin.removeAttribute('class')
+            } else {
+              currentbin.setAttribute('class', className)
+            }
+          }
+          
+          // Set this element as the bin and add active class
+          if (window.SvgNest) {
+            window.SvgNest.setbin(this)
+            setBinSelected(true)
+            console.log('Bin selected:', this)
+          }
+          
+          this.setAttribute('class', (this.getAttribute('class') ? this.getAttribute('class') + ' ' : '') + 'active')
+        }
+      }
+    }
+  }, [setBinSelected])
+
   const startNest = useCallback(() => {
     console.log('Starting nest with callbacks:', { progress, renderSvg })
     
@@ -164,6 +199,7 @@ export const useSVGNest = () => {
     startNest,
     stopNest,
     handleDownload,
+    attachSvgListeners,
     progress,
     renderSvg
   }
