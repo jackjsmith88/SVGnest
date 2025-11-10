@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import BinVisualizer from './BinVisualizer'
-import { testMultiBinNesting, createSimpleShapes, createRealisticCuttingScenario } from '..//utils/multiBinNesting'
+import { createSimpleShapes, createRealisticCuttingScenario } from '../utils/multiBinNesting'
+import { runMultiBinSVGNest } from '../utils/multiBinSVGNest'
 
 function MultiBinTester() {
   const [numBins, setNumBins] = useState(3)
@@ -8,41 +9,72 @@ function MultiBinTester() {
   const [binHeight, setBinHeight] = useState(300)
   const [numShapes, setNumShapes] = useState(10)
   const [scenario, setScenario] = useState('mixed')
-  const [results, setResults] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [timePerBin, setTimePerBin] = useState(30) // New: seconds per bin
   const [error, setError] = useState(null)
+  const [isRunning, setIsRunning] = useState(false)
+  const [currentBin, setCurrentBin] = useState(0)
+  const [results, setResults] = useState(null)
 
-  const runTest = () => {
-    setLoading(true)
+  // Run multi-bin packing with SVGnest
+  const handleStart = async () => {
+    if (isRunning) {
+      return
+    }
+
+    setIsRunning(true)
     setError(null)
+    setResults(null)
+    setCurrentBin(0)
 
     try {
-      // Create bins
-      const bins = []
-      for (let i = 0; i < numBins; i++) {
-        bins.push({
-          id: `bin-${i}`,
-          width: binWidth,
-          height: binHeight,
-          shapes: []
-        })
-      }
-
-      // Create test shapes using selected scenario
+      // Create test shapes
       const shapes = scenario === 'kitchen' 
         ? createRealisticCuttingScenario('kitchen', numShapes)
         : createSimpleShapes(numShapes, binWidth, binHeight)
 
-      // Test nesting
-      const nestingResults = testMultiBinNesting(bins, shapes)
+      console.log(`Starting multi-bin packing with ${shapes.length} shapes across up to ${numBins} bins`)
+      console.log(`Each bin will run for ${timePerBin} seconds`)
 
-      setResults(nestingResults)
+      // Run SVGnest multi-bin packing
+      const result = await runMultiBinSVGNest(
+        shapes,
+        binWidth,
+        binHeight,
+        numBins,
+        timePerBin,
+        (binResult, binIndex, allBins) => {
+          // Called when each bin completes
+          setCurrentBin(binIndex + 1)
+          console.log(`Completed bin ${binIndex + 1}/${numBins}`)
+          
+          // Update results in real-time
+          setResults({
+            bins: allBins,
+            binsUsed: allBins.length,
+            totalBins: numBins,
+            totalShapes: shapes.length,
+            placedShapes: allBins.reduce((sum, b) => sum + b.placedCount, 0),
+            unplacedShapes: shapes.length - allBins.reduce((sum, b) => sum + b.placedCount, 0),
+            binEfficiency: allBins.reduce((sum, b) => sum + (b.efficiency * 100), 0) / allBins.length
+          })
+        }
+      )
+
+      setResults(result)
+      console.log('Multi-bin packing complete:', result)
+
     } catch (err) {
       setError(err.message)
-      console.error('Nesting error:', err)
+      console.error('Multi-bin packing error:', err)
     } finally {
-      setLoading(false)
+      setIsRunning(false)
     }
+  }
+
+  const handleReset = () => {
+    setResults(null)
+    setError(null)
+    setCurrentBin(0)
   }
 
   const loadCustomShapes = () => {
@@ -53,7 +85,10 @@ function MultiBinTester() {
   return (
     <div className="multibin-tester">
       <div className="multibin-controls">
-        <h2>Multi-Bin Configuration</h2>
+        <h2>Multi-Bin Configuration (SVGnest)</h2>
+        <p style={{ fontSize: '0.9em', color: '#666', marginTop: '-0.5em' }}>
+          Uses the proven SVGnest genetic algorithm across multiple bins
+        </p>
 
         <div className="control-row">
           <div className="control-group">
@@ -64,6 +99,7 @@ function MultiBinTester() {
               max="10"
               value={numBins}
               onChange={(e) => setNumBins(parseInt(e.target.value))}
+              disabled={isRunning}
             />
           </div>
 
@@ -75,6 +111,7 @@ function MultiBinTester() {
               max="1000"
               value={binWidth}
               onChange={(e) => setBinWidth(parseInt(e.target.value))}
+              disabled={isRunning}
             />
           </div>
 
@@ -86,6 +123,7 @@ function MultiBinTester() {
               max="1000"
               value={binHeight}
               onChange={(e) => setBinHeight(parseInt(e.target.value))}
+              disabled={isRunning}
             />
           </div>
 
@@ -97,6 +135,21 @@ function MultiBinTester() {
               max="50"
               value={numShapes}
               onChange={(e) => setNumShapes(parseInt(e.target.value))}
+              disabled={isRunning}
+            />
+          </div>
+
+          <div className="control-group">
+            <label>Time per Bin (seconds):</label>
+            <input
+              type="number"
+              min="5"
+              max="300"
+              step="5"
+              value={timePerBin}
+              onChange={(e) => setTimePerBin(parseInt(e.target.value))}
+              disabled={isRunning}
+              title="How long SVGnest runs on each bin before moving to the next"
             />
           </div>
 
@@ -105,6 +158,7 @@ function MultiBinTester() {
             <select
               value={scenario}
               onChange={(e) => setScenario(e.target.value)}
+              disabled={isRunning}
             >
               <option value="mixed">Mixed (Random L-shapes & Rectangles)</option>
               <option value="kitchen">Kitchen (Realistic Worktops)</option>
@@ -114,20 +168,44 @@ function MultiBinTester() {
 
         <div className="button-row">
           <button 
-            className="button start-button" 
-            onClick={runTest} 
-            disabled={loading}
+            className={`button ${isRunning ? 'stop-button' : 'start-button'}`}
+            onClick={handleStart}
+            disabled={isRunning}
           >
-            {loading ? 'Running...' : 'Run Multi-Bin Test'}
+            {isRunning ? `Running... (Bin ${currentBin}/${numBins})` : 'Start Multi-Bin Packing'}
+          </button>
+
+          <button 
+            className="button secondary" 
+            onClick={handleReset}
+            disabled={isRunning}
+          >
+            Reset
           </button>
 
           <button 
             className="button secondary" 
             onClick={loadCustomShapes}
+            disabled={isRunning}
           >
             Load Custom Shapes
           </button>
         </div>
+
+        {/* Progress indicator */}
+        {isRunning && (
+          <div className="progress-info">
+            <div className="stat-item">
+              <strong>Status:</strong> Packing bin {currentBin}/{numBins}
+            </div>
+            <div className="stat-item">
+              <strong>Time per bin:</strong> {timePerBin}s
+            </div>
+            <div className="stat-item">
+              <strong>Algorithm:</strong> SVGnest Genetic Algorithm
+            </div>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -138,7 +216,7 @@ function MultiBinTester() {
 
       {results && (
         <div className="multibin-results">
-          <h2>Multi-Bin Results</h2>
+          <h2>Multi-Bin Results <span className="best-badge">SVGnest Algorithm</span></h2>
 
           <div className="summary-stats">
             <div className="stat-group">
@@ -160,37 +238,43 @@ function MultiBinTester() {
             <div className="stat-group">
               <h3>Efficiency Metrics</h3>
               <div className="stat-item">
-                <strong>Bin utilization:</strong> {results.binEfficiency || results.efficiency}%
+                <strong>Average bin efficiency:</strong> {results.binEfficiency?.toFixed(1)}%
               </div>
               <div className="stat-item">
-                <strong>Material efficiency:</strong> {results.materialEfficiency}%
+                <strong>Total iterations:</strong> {results.bins?.reduce((sum, b) => sum + (b.iterations || 0), 0)}
               </div>
               <div className="stat-item">
-                <strong>Actual area used:</strong> {Math.round(results.usedActualArea || 0)} px²
+                <strong>Time per bin:</strong> {timePerBin}s
               </div>
               <div className="stat-item">
-                <strong>Bounding area used:</strong> {Math.round(results.usedBoundingArea || 0)} px²
-              </div>
-              <div className="stat-item">
-                <strong>Total bin area:</strong> {Math.round(results.totalBinArea || 0)} px²
+                <strong>Total time:</strong> ~{results.binsUsed * timePerBin}s
               </div>
             </div>
           </div>
 
           <div className="bin-container">
-            {results.bins.map((bin, index) => (
-              <BinVisualizer
-                key={bin.id}
-                bin={bin}
-                index={index}
-              />
+            {results.bins?.map((bin, index) => (
+              <div key={bin.binIndex || index} className="bin-result">
+                <h3>Bin {bin.binIndex + 1}</h3>
+                <div className="bin-stats">
+                  <span>Shapes: {bin.placedCount}</span>
+                  <span>Efficiency: {(bin.efficiency * 100).toFixed(1)}%</span>
+                  <span>Iterations: {bin.iterations}</span>
+                </div>
+                {bin.svg && (
+                  <div 
+                    className="svg-display" 
+                    dangerouslySetInnerHTML={{ __html: bin.svg.outerHTML }}
+                  />
+                )}
+              </div>
             ))}
           </div>
 
           {results.unplacedShapes > 0 && (
             <div className="message error">
               <strong>Warning:</strong> {results.unplacedShapes} shape(s) could not be placed in any bin.
-              Consider increasing bin dimensions or adding more bins.
+              Consider increasing bin dimensions, adding more bins, or allowing more time per bin.
             </div>
           )}
         </div>

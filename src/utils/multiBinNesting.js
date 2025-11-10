@@ -302,3 +302,402 @@ export function advancedMultiBinNesting(bins, shapes, config = {}) {
   console.log('Advanced nesting not yet implemented, using simple nesting')
   return testMultiBinNesting(bins, shapes)
 }
+
+/**
+ * Iterative multi-bin nesting that uses genetic algorithm-inspired approach
+ * Mirrors the single-bin SVGnest algorithm but optimizes across multiple bins
+ * @param {Array} bins - Array of bin objects
+ * @param {Array} shapes - Array of shapes to nest
+ * @param {number} iteration - Current iteration number (affects population member)
+ * @returns {Object} Nesting result with placement info
+ */
+export function testMultiBinNestingIterative(bins, shapes, iteration = 1) {
+  // Clone bins to avoid modifying originals
+  const testBins = bins.map(bin => ({
+    ...bin,
+    shapes: []
+  }))
+
+  // Use genetic algorithm-inspired approach similar to SVGnest
+  // Each iteration tests a different "individual" from the population
+  
+  // Sort shapes by area (like SVGnest's adam seed)
+  const sortedShapes = [...shapes].sort((a, b) => 
+    Math.abs(b.boundingArea || b.area || 0) - Math.abs(a.boundingArea || a.area || 0)
+  )
+  
+  // Apply mutation based on iteration (like genetic algorithm)
+  const placementOrder = applyGeneticVariation(sortedShapes, iteration)
+  
+  // Log variation to verify it's changing
+  if (iteration <= 10 || iteration % 50 === 0) {
+    const orderIds = placementOrder.map(s => s.id).join(',')
+    const searchPattern = Math.floor(iteration / 15) % 5
+    const scoringPhase = Math.floor(iteration / 20) % 5
+    const patternNames = ['TopLeft→BottomRight', 'BottomLeft→TopRight', 'Right→Left', 'Center→Out', 'Random']
+    const phaseNames = ['BottomLeft', 'TopLeft', 'BottomRight', 'Center', 'Edge']
+    console.log(`Iteration ${iteration}: Order=[${orderIds}], Search=${patternNames[searchPattern]}, Scoring=${phaseNames[scoringPhase]}`)
+  }
+  
+  // Try to place each shape using best-fit across all bins
+  let placedCount = 0
+  const unplacedShapes = []
+  
+  for (const shape of placementOrder) {
+    const bestPlacement = findBestPlacementAcrossAllBins(testBins, shape, iteration)
+    
+    if (bestPlacement) {
+      const { binIndex, x, y, rotation } = bestPlacement
+      
+      // Apply rotation to get correct dimensions
+      const rotatedShape = applyRotation(shape, rotation)
+      
+      const placedShape = { 
+        ...rotatedShape,  // Use rotated shape with correct dimensions
+        x, 
+        y, 
+        rotation: rotation || 0,
+        originalId: shape.id  // Keep original ID for tracking
+      }
+      testBins[binIndex].shapes.push(placedShape)
+      placedCount++
+    } else {
+      unplacedShapes.push(shape)
+    }
+  }
+
+  // Calculate efficiency metrics
+  return calculateMultiBinMetrics(testBins, shapes, placedCount, unplacedShapes, iteration)
+}
+
+/**
+ * Apply genetic algorithm-style variation to shape order
+ * Similar to SVGnest's mutation and crossover operations
+ */
+function applyGeneticVariation(shapes, iteration) {
+  const population = [...shapes]
+  
+  // Mutation rate varies by iteration cycle
+  // Start with some mutation, increase over time
+  const cycle = (iteration - 1) % 100
+  const mutationRate = Math.min(0.4, 0.1 + (cycle / 100) * 0.3)
+  
+  // Apply mutations: swap random pairs
+  const numMutations = Math.max(1, Math.floor(population.length * mutationRate))
+  for (let i = 0; i < numMutations; i++) {
+    const idx1 = Math.floor(seededRandom(iteration * 7 + i) * population.length)
+    const idx2 = Math.floor(seededRandom(iteration * 13 + i + 1000) * population.length)
+    if (idx1 !== idx2) {
+      ;[population[idx1], population[idx2]] = [population[idx2], population[idx1]]
+    }
+  }
+  
+  // Every 25 iterations, try reverse order (like population diversity)
+  if (Math.floor(iteration / 25) % 2 === 1) {
+    return population.reverse()
+  }
+  
+  // Every 10 iterations, rotate the array
+  if (iteration % 10 === 0) {
+    const rotateAmount = Math.floor(seededRandom(iteration) * population.length)
+    return [...population.slice(rotateAmount), ...population.slice(0, rotateAmount)]
+  }
+  
+  return population
+}
+
+/**
+ * Find the best placement for a shape across all available bins
+ * This is the core optimization similar to SVGnest's NFP (No-Fit Polygon) approach
+ */
+function findBestPlacementAcrossAllBins(bins, shape, iteration) {
+  let bestPlacement = null
+  let bestScore = -Infinity
+  
+  // Test each bin
+  for (let binIndex = 0; binIndex < bins.length; binIndex++) {
+    const bin = bins[binIndex]
+    
+    // Try multiple rotations (like SVGnest's rotation parameter)
+    const rotations = [0, 90, 180, 270]
+    
+    for (const rotation of rotations) {
+      const rotatedShape = applyRotation(shape, rotation)
+      
+      // Find best position in this bin with this rotation
+      const placement = findBestPositionInBin(bin, rotatedShape, iteration)
+      
+      if (placement) {
+        // Score this placement (lower is better - minimize waste)
+        const score = scorePlacement(bin, rotatedShape, placement.x, placement.y, binIndex, iteration)
+        
+        if (score > bestScore) {
+          bestScore = score
+          bestPlacement = {
+            binIndex,
+            x: placement.x,
+            y: placement.y,
+            rotation
+          }
+        }
+      }
+    }
+  }
+  
+  return bestPlacement
+}
+
+/**
+ * Apply rotation to shape (0, 90, 180, 270 degrees)
+ */
+function applyRotation(shape, degrees) {
+  if (degrees === 0) {
+    return shape
+  }
+  
+  // For 90 or 270, swap width and height
+  if (degrees === 90 || degrees === 270) {
+    return {
+      ...shape,
+      width: shape.height,
+      height: shape.width,
+      rotated: true
+    }
+  }
+  
+  // 180 degrees doesn't change dimensions
+  return shape
+}
+
+/**
+ * Find best position within a specific bin
+ * Uses a grid-based search similar to SVGnest's placement algorithm
+ */
+function findBestPositionInBin(bin, shape, iteration) {
+  // Adaptive grid size: finer grid in later iterations
+  const baseGridSize = 10
+  const gridSize = Math.max(3, baseGridSize - Math.floor(iteration / 100))
+  
+  let bestPosition = null
+  let bestWaste = Infinity
+  
+  // Vary search pattern based on iteration to find different solutions
+  // Use longer cycle so patterns don't repeat too quickly
+  const searchPattern = Math.floor(iteration / 15) % 5
+  
+  // Try different search patterns
+  if (searchPattern === 0) {
+    // Top-left to bottom-right (default)
+    for (let y = 0; y <= bin.height - shape.height; y += gridSize) {
+      for (let x = 0; x <= bin.width - shape.width; x += gridSize) {
+        if (canPlaceShape(bin, shape, x, y)) {
+          const waste = calculateLocalWaste(bin, shape, x, y)
+          if (waste < bestWaste) {
+            bestWaste = waste
+            bestPosition = { x, y }
+          }
+        }
+      }
+    }
+  } else if (searchPattern === 1) {
+    // Bottom-left to top-right
+    for (let y = bin.height - shape.height; y >= 0; y -= gridSize) {
+      for (let x = 0; x <= bin.width - shape.width; x += gridSize) {
+        if (canPlaceShape(bin, shape, x, y)) {
+          const waste = calculateLocalWaste(bin, shape, x, y)
+          if (waste < bestWaste) {
+            bestWaste = waste
+            bestPosition = { x, y }
+          }
+        }
+      }
+    }
+  } else if (searchPattern === 2) {
+    // Right to left, top to bottom
+    for (let y = 0; y <= bin.height - shape.height; y += gridSize) {
+      for (let x = bin.width - shape.width; x >= 0; x -= gridSize) {
+        if (canPlaceShape(bin, shape, x, y)) {
+          const waste = calculateLocalWaste(bin, shape, x, y)
+          if (waste < bestWaste) {
+            bestWaste = waste
+            bestPosition = { x, y }
+          }
+        }
+      }
+    }
+  } else if (searchPattern === 3) {
+    // Center outward spiral-ish pattern
+    const centerX = (bin.width - shape.width) / 2
+    const centerY = (bin.height - shape.height) / 2
+    for (let y = 0; y <= bin.height - shape.height; y += gridSize) {
+      for (let x = 0; x <= bin.width - shape.width; x += gridSize) {
+        if (canPlaceShape(bin, shape, x, y)) {
+          // Prefer positions closer to center for this pattern
+          const distToCenter = Math.abs(x - centerX) + Math.abs(y - centerY)
+          const waste = distToCenter
+          if (waste < bestWaste) {
+            bestWaste = waste
+            bestPosition = { x, y }
+          }
+        }
+      }
+    }
+  } else {
+    // Random sampling - try random positions
+    const maxAttempts = 50
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const x = Math.floor(seededRandom(iteration * 100 + attempt) * (bin.width - shape.width + 1))
+      const y = Math.floor(seededRandom(iteration * 200 + attempt) * (bin.height - shape.height + 1))
+      
+      // Snap to grid
+      const gridX = Math.floor(x / gridSize) * gridSize
+      const gridY = Math.floor(y / gridSize) * gridSize
+      
+      if (canPlaceShape(bin, shape, gridX, gridY)) {
+        const waste = calculateLocalWaste(bin, shape, gridX, gridY)
+        if (waste < bestWaste) {
+          bestWaste = waste
+          bestPosition = { x: gridX, y: gridY }
+        }
+      }
+    }
+  }
+  
+  return bestPosition
+}
+
+/**
+ * Score a placement (higher is better)
+ * Considers: bin utilization, shape packing density, bin balance
+ * Add variation based on iteration to explore different solutions
+ */
+function scorePlacement(bin, shape, x, y, binIndex, iteration = 1) {
+  const totalBinArea = bin.width * bin.height
+  const usedArea = bin.shapes.reduce((sum, s) => sum + (s.boundingArea || s.area || 0), 0)
+  const shapeArea = shape.boundingArea || shape.area || 0
+  
+  // Current bin utilization
+  const utilization = (usedArea + shapeArea) / totalBinArea
+  
+  // Vary placement preferences based on iteration phase
+  const phase = Math.floor(iteration / 20) % 5
+  
+  let gravityScore = 0
+  const binHeight = bin.height
+  const binWidth = bin.width
+  
+  switch(phase) {
+    case 0: // Bottom-left preference (traditional)
+      gravityScore = ((binHeight - y) / binHeight) * 0.3 + ((binWidth - x) / binWidth) * 0.2
+      break
+    case 1: // Top-left preference
+      gravityScore = (y / binHeight) * 0.3 + ((binWidth - x) / binWidth) * 0.2
+      break
+    case 2: // Bottom-right preference  
+      gravityScore = ((binHeight - y) / binHeight) * 0.3 + (x / binWidth) * 0.2
+      break
+    case 3: // Center preference
+      const centerX = binWidth / 2
+      const centerY = binHeight / 2
+      const distToCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2))
+      const maxDist = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2))
+      gravityScore = (1 - distToCenter / maxDist) * 0.5
+      break
+    case 4: // Edge preference (perimeter first)
+      const distToEdge = Math.min(x, y, binWidth - x - shape.width, binHeight - y - shape.height)
+      gravityScore = (1 - distToEdge / Math.max(binWidth, binHeight)) * 0.5
+      break
+  }
+  
+  // Penalize using many bins (prefer filling fewer bins)
+  const binPenalty = binIndex * 0.15
+  
+  // Add small random variation to break ties and explore
+  const randomFactor = seededRandom(iteration * 1000 + x * 100 + y * 10 + binIndex) * 0.05
+  
+  // Combined score (higher is better)
+  return utilization + gravityScore - binPenalty + randomFactor
+}
+
+/**
+ * Calculate local wasted space around a placement
+ * Lower waste means tighter packing
+ */
+function calculateLocalWaste(bin, shape, x, y) {
+  // Distance from edges (prefer corners)
+  const leftGap = x
+  const topGap = y
+  const rightGap = bin.width - (x + shape.width)
+  const bottomGap = bin.height - (y + shape.height)
+  
+  // Sum of gaps (lower is better for tight packing)
+  return leftGap + topGap + Math.min(rightGap, 20) + Math.min(bottomGap, 20)
+}
+
+/**
+ * Calculate comprehensive metrics for multi-bin result
+ */
+function calculateMultiBinMetrics(testBins, shapes, placedCount, unplacedShapes, iteration) {
+  const binsUsed = testBins.filter(bin => bin.shapes.length > 0).length
+  
+  // Calculate total area available in USED bins only
+  const usedBinsArea = testBins
+    .filter(bin => bin.shapes.length > 0)
+    .reduce((sum, bin) => sum + (bin.width * bin.height), 0)
+  
+  const totalBinArea = testBins.reduce((sum, bin) => sum + (bin.width * bin.height), 0)
+  
+  const usedActualArea = testBins.reduce((sum, bin) => {
+    return sum + bin.shapes.reduce((s, shape) => s + (shape.area || 0), 0)
+  }, 0)
+  
+  const usedBoundingArea = testBins.reduce((sum, bin) => {
+    return sum + bin.shapes.reduce((s, shape) => s + (shape.boundingArea || shape.area || 0), 0)
+  }, 0)
+  
+  const totalMaterialEfficiency = shapes.reduce((sum, shape) => {
+    if (shape.type === 'cutshape' || shape.type === 'dimensionshape') {
+      return sum + (shape.efficiency || 1)
+    }
+    return sum + 1
+  }, 0) / shapes.length
+  
+  // Key metric: bin efficiency (how much of USED bin space is filled)
+  // This should never exceed 100% if collision detection is working
+  const binEfficiency = usedBinsArea > 0 ? ((usedBoundingArea / usedBinsArea) * 100) : 0
+  const materialEfficiency = (totalMaterialEfficiency * 100)
+
+  // Debug: Check if we have overlaps (efficiency > 100%)
+  if (binEfficiency > 100) {
+    console.warn(`Warning: Bin efficiency ${binEfficiency.toFixed(1)}% exceeds 100% - possible overlaps!`)
+    console.warn(`Used bins area: ${usedBinsArea}, Bounding area: ${usedBoundingArea}`)
+  }
+
+  return {
+    bins: testBins,
+    totalShapes: shapes.length,
+    placedShapes: placedCount,
+    unplacedShapes: unplacedShapes.length,
+    unplaced: unplacedShapes,
+    binsUsed,
+    totalBins: testBins.length,
+    binEfficiency: parseFloat(binEfficiency.toFixed(1)),
+    materialEfficiency: parseFloat(materialEfficiency.toFixed(1)),
+    usedActualArea,
+    usedBoundingArea,
+    totalBinArea,
+    usedBinsArea, // Add this for debugging
+    efficiency: parseFloat(binEfficiency.toFixed(1)),
+    iteration
+  }
+}
+
+/**
+ * Seeded random number generator for reproducible results
+ */
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
+

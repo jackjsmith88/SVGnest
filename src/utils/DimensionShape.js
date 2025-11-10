@@ -147,6 +147,94 @@ export class DimensionShape {
   }
 
   /**
+   * Get polygon points for SVG rendering/nesting algorithms
+   * Returns array of {x, y} coordinates forming the outer boundary
+   * Coordinates are relative to origin (0, 0)
+   */
+  getPolygonPoints() {
+    if (this.type === 'RECTANGLE') {
+      // Rectangle: 4 corner points (clockwise from top-left)
+      return [
+        { x: 0, y: 0 },
+        { x: this.length, y: 0 },
+        { x: this.length, y: this.width },
+        { x: 0, y: this.width }
+      ]
+    }
+
+    if (this.type === 'L_SHAPE') {
+      // L-Shape: 6 points forming the outline (clockwise from top-left)
+      // Main rectangle: length × armWidth (top portion)
+      // Arm rectangle: armLength × (width - armWidth) (bottom-left portion)
+      return [
+        { x: 0, y: 0 },                              // Top-left of main
+        { x: this.length, y: 0 },                    // Top-right of main
+        { x: this.length, y: this.armWidth },        // Bottom-right of main
+        { x: this.armLength, y: this.armWidth },     // Inner corner (notch)
+        { x: this.armLength, y: this.width },        // Bottom-right of arm
+        { x: 0, y: this.width }                      // Bottom-left of arm
+      ]
+    }
+
+    return []
+  }
+
+  /**
+   * Create DimensionShape from polygon points
+   * Analyzes polygon to determine if it's a rectangle or L-shape
+   * Returns null if polygon doesn't match expected patterns
+   */
+  static fromPolygonPoints(points) {
+    if (!points || points.length < 3) {
+      return null
+    }
+
+    // Calculate bounding box
+    const xs = points.map(p => p.x)
+    const ys = points.map(p => p.y)
+    const minX = Math.min(...xs)
+    const maxX = Math.max(...xs)
+    const minY = Math.min(...ys)
+    const maxY = Math.max(...ys)
+
+    // Rectangle check (4 points)
+    if (points.length === 4) {
+      const length = maxX - minX
+      const width = maxY - minY
+      
+      return DimensionShape.createRectangle(length, width)
+    }
+
+    // L-Shape check (6 points)
+    if (points.length === 6) {
+      // Sort points to identify the notch
+      const sortedByY = [...points].sort((a, b) => a.y - b.y)
+      const sortedByX = [...points].sort((a, b) => a.x - b.x)
+
+      // For standard L-shape (horizontal orientation):
+      // Total dimensions
+      const length = maxX - minX
+      const width = maxY - minY
+
+      // Find the inner corner (notch) - should have intermediate x and y values
+      const notchCandidates = points.filter(p => 
+        p.x > minX && p.x < maxX && p.y > minY && p.y < maxY
+      )
+
+      if (notchCandidates.length >= 1) {
+        const notch = notchCandidates[0]
+        const armWidth = notch.y - minY
+        const armLength = notch.x - minX
+
+        return DimensionShape.createLShape(length, width, armLength, armWidth)
+      }
+    }
+
+    // Couldn't identify shape pattern
+    return null
+  }
+
+  /**
    * Check if a point is inside the shape (not including cavities)
    */
   containsPoint(pointX, pointY, shapeX = 0, shapeY = 0) {

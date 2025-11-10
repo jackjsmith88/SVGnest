@@ -294,6 +294,46 @@ h3 {
   border-color: #8498d1;
 }
 
+.button.stop-button {
+  background: #d9534f;
+  color: white;
+  border-color: #d9534f;
+}
+
+.button.stop-button:hover {
+  background: #c9302c;
+  border-color: #c9302c;
+}
+
+/* Progress info during nesting */
+.progress-info {
+  background: #fff8dc;
+  border: 1px solid #ffc107;
+  border-radius: 0.3em;
+  padding: 1em;
+  margin-top: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-info .stat-item {
+  font-size: 0.9em;
+}
+
+.best-badge {
+  display: inline-block;
+  background: #3bb34a;
+  color: white;
+  padding: 0.2em 0.8em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-left: 0.5em;
+}
+
 /* Multi-bin results */
 .multibin-results {
   margin-top: 2em;
@@ -342,6 +382,47 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2em;
   margin: 2em 0;
+}
+
+.bin-result {
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 0.5em;
+  padding: 1em;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bin-result h3 {
+  margin: 0 0 0.5em 0;
+  color: #3bb34a;
+}
+
+.bin-stats {
+  display: flex;
+  gap: 1em;
+  margin-bottom: 1em;
+  font-size: 0.85em;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.bin-stats span {
+  background: #f0f8ff;
+  padding: 0.3em 0.6em;
+  border-radius: 0.3em;
+}
+
+.svg-display {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.3em;
+  padding: 0.5em;
+  overflow: auto;
+}
+
+.svg-display svg {
+  max-width: 100%;
+  height: auto;
 }
 
 .bin-item {
