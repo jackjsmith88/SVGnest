@@ -123,6 +123,9 @@ export const useSVGNest = () => {
           
           // Set this element as the bin and add active class
           if (window.SvgNest) {
+            console.log('=== SETBIN DEBUG ===')
+            console.log('Setting bin element:', this.tagName, this)
+            
             window.SvgNest.setbin(this)
             setBinSelected(true)
             console.log('Bin selected:', this)
@@ -135,6 +138,7 @@ export const useSVGNest = () => {
   }, [setBinSelected])
 
   const startNest = useCallback(() => {
+    console.log('=== START NEST DEBUG ===')
     console.log('Starting nest with callbacks:', { progress, renderSvg })
     
     if (!window.SvgNest) {
@@ -142,7 +146,42 @@ export const useSVGNest = () => {
       return { success: false, message: 'SVGnest not loaded' }
     }
     
-    window.SvgNest.start(progress, renderSvg)
+    // DEBUG: Check what's in the select element
+    const selectElement = document.getElementById('select')
+    if (selectElement) {
+      console.log('Select element children:', selectElement.children.length)
+      console.log('Select SVG child count:', selectElement.querySelector('svg')?.childNodes.length)
+      const svgEl = selectElement.querySelector('svg')
+      if (svgEl) {
+        console.log('SVG children types:', Array.from(svgEl.childNodes).map((n, i) => `${i}: ${n.tagName || 'text'}`))
+      }
+    }
+    
+    // DEBUG: Add callback to log what applyPlacement receives
+    const originalRenderSvg = renderSvg
+    const debugRenderSvg = function(svglist, efficiency, placed, total) {
+      console.log('🔵 RENDERSVG CALLED')
+      console.log('SVG list length:', svglist?.length)
+      if (svglist && svglist[0]) {
+        console.log('First SVG children:', svglist[0].childNodes.length)
+        console.log('First SVG child types:', Array.from(svglist[0].childNodes).map((n, i) => `${i}: ${n.tagName || n.nodeType}`))
+        
+        // Inspect the first few g groups to see what's inside
+        const gGroups = Array.from(svglist[0].childNodes).filter(n => n.tagName === 'g')
+        console.log('🔍 Inspecting first 5 g groups:')
+        for (let i = 0; i < Math.min(5, gGroups.length); i++) {
+          const g = gGroups[i]
+          console.log(`  G[${i}]:`, g.childNodes.length, 'children -', 
+            Array.from(g.childNodes).map(c => c.tagName || c.nodeType).join(', '))
+          if (g.childNodes[0]) {
+            console.log(`    First child:`, g.childNodes[0].tagName, g.childNodes[0].outerHTML?.substring(0, 150))
+          }
+        }
+      }
+      return originalRenderSvg(svglist, efficiency, placed, total)
+    }
+    
+    window.SvgNest.start(progress, debugRenderSvg)
     setIsWorking(true)
 
     const svg = document.querySelector('#select svg')

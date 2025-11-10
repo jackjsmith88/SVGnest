@@ -65,6 +65,18 @@ function App() {
     } else if (scriptsLoaded) {
       setMessage('SVGnest ready! Click Demo or Upload SVG to start')
       setMessageClass(MESSAGE_TYPES.SUCCESS)
+      
+      // DEBUG: Wrap parsesvg to track all calls
+      if (window.SvgNest && window.SvgNest.parsesvg) {
+        const originalParse = window.SvgNest.parsesvg
+        window.SvgNest.parsesvg = function(svgstring) {
+          console.log('🔴 PARSESVG CALLED!')
+          console.log('SVG string length:', svgstring?.length)
+          console.log('First 200 chars:', svgstring?.substring(0, 200))
+          console.trace('Call stack:')
+          return originalParse.call(this, svgstring)
+        }
+      }
     }
   }, [scriptsLoaded, loadingError])
 
@@ -82,8 +94,19 @@ function App() {
     const displayElement = displayRef.current
     if (displayElement && window.SvgNest) {
       try {
+        // DEBUG: Log what we're about to parse
+        console.log('=== DEMO LOAD DEBUG ===')
+        console.log('Display element innerHTML length:', displayElement.innerHTML.length)
+        console.log('Display element child count:', displayElement.children.length)
+        console.log('First 500 chars:', displayElement.innerHTML.substring(0, 500))
+        
         // Parse the SVG content like in the original
         const svg = window.SvgNest.parsesvg(displayElement.innerHTML)
+        
+        // DEBUG: Log what we got back
+        console.log('Parsed SVG child count:', svg.childNodes.length)
+        console.log('Parsed SVG children:', Array.from(svg.childNodes).map(n => n.tagName || n.nodeType))
+        
         displayElement.innerHTML = ''
         displayElement.appendChild(svg)
         
