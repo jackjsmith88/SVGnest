@@ -1,3 +1,4 @@
+import { Button, ButtonGroup } from 'react-bootstrap'
 import FAQModal from './FAQModal'
 
 function SplashScreen({ 
@@ -12,16 +13,45 @@ function SplashScreen({
       <h1 className="title">SVGnest</h1>
       <em className="subscript">Open Source nesting</em>
 
-      <ul className="nav">
-        <li className="button start" onClick={onDemo}>Demo</li>
-        <li className="button upload" onClick={onUpload}>Upload SVG</li>
-        <li className="button code">
-          <a href="https://github.com/Jack000/SVGnest" target="_blank" rel="noopener noreferrer">Github</a>
-        </li>
-        <li className="button" onClick={() => setFaqVisible(true)}>
-          FAQ ❓
-        </li>
-      </ul>
+      <div className="d-flex flex-wrap justify-content-center gap-3 mt-4">
+        <Button 
+          variant="outline-success" 
+          size="lg" 
+          onClick={onDemo}
+          className="splash-button"
+        >
+          ▶ Demo
+        </Button>
+        
+        <Button 
+          variant="outline-success" 
+          size="lg" 
+          onClick={onUpload}
+          className="splash-button"
+        >
+          📁 Upload SVG
+        </Button>
+        
+        <Button 
+          variant="outline-success" 
+          size="lg" 
+          href="https://github.com/Jack000/SVGnest" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="splash-button"
+        >
+          🔗 Github
+        </Button>
+        
+        <Button 
+          variant="outline-success" 
+          size="lg" 
+          onClick={() => setFaqVisible(true)}
+          className="splash-button"
+        >
+          ❓ FAQ
+        </Button>
+      </div>
 
       <FAQModal 
         show={faqVisible} 

@@ -78,28 +78,41 @@ h3 {
   font-style: normal;
 }
 
+/* Legacy nav styles - keeping for other parts of the app */
 .nav {
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  list-style: none;
 }
 
-li {
+.nav li {
   list-style: none;
-  float: left;
   margin: 0;
   padding: 0;
 }
 
+/* Legacy button styles for non-Bootstrap buttons */
 .button {
-  display: block;
-  margin: 0 0.5em;
-  padding: 0.6em 2.4em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.6em 2em;
   background-color: #fff;
-  border-radius: 5em;
+  border-radius: 2em;
   border: 2px solid #d7e9b7;
   cursor: pointer;
   color: #3bb34a;
   transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  min-width: 120px;
+  text-align: center;
 }
 
 .button:hover {
@@ -113,6 +126,40 @@ li {
   background-color: #3bb34a;
   color: #fff;
   border-color: #3bb34a;
+}
+
+/* Custom Bootstrap Button Styling - Override legacy .button styles */
+.btn.splash-button {
+  --bs-btn-color: #3bb34a !important;
+  --bs-btn-border-color: #3bb34a !important;
+  --bs-btn-hover-color: #fff !important;
+  --bs-btn-hover-bg: #3bb34a !important;
+  --bs-btn-hover-border-color: #3bb34a !important;
+  --bs-btn-focus-shadow-rgb: 59, 179, 74;
+  --bs-btn-active-color: #fff !important;
+  --bs-btn-active-bg: #2ea03a !important;
+  --bs-btn-active-border-color: #2ea03a !important;
+  min-width: 140px !important;
+  font-weight: 500;
+  border-width: 2px !important;
+  transition: all 0.2s ease !important;
+  /* Override legacy button styles */
+  display: inline-block !important;
+  padding: 0.375rem 0.75rem !important;
+  margin: 0.25rem !important;
+  background-color: transparent !important;
+  border-radius: var(--bs-border-radius) !important;
+  text-decoration: none !important;
+  line-height: 1.5 !important;
+}
+
+.btn.splash-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(59, 179, 74, 0.3) !important;
+}
+
+.btn.splash-button:focus {
+  box-shadow: 0 0 0 0.25rem rgba(59, 179, 74, 0.25) !important;
 }
 
 /* FAQ Modal Styles - Bootstrap handles most styling */
@@ -394,5 +441,41 @@ li {
   
   .summary-stats {
     flex-direction: column;
+  }
+  
+  /* Responsive navigation */
+  .nav {
+    flex-direction: column;
+    gap: 0.8em;
+    align-items: stretch;
+  }
+  
+  .button {
+    min-width: 200px;
+    padding: 0.8em 1.5em;
+  }
+  
+  /* Responsive Bootstrap buttons */
+  .btn.splash-button {
+    min-width: 200px !important;
+    margin: 0.25rem 0 !important;
+  }
+  
+  #splash {
+    width: 90%;
+    margin: 5% auto 0 auto;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .nav {
+    gap: 0.3em;
+  }
+  
+  .button {
+    min-width: 100px;
+    padding: 0.5em 1.5em;
+    font-size: 0.9em;
   }
 }
