@@ -221,14 +221,14 @@ export async function runMultiBinSVGNest(
     window.SvgNest.setbin(parsedBin)
     console.log('Bin set successfully')
 
-    // Configure SVGnest - use same defaults as single-bin mode
+    // Configure SVGnest for better packing (same as V1)
     window.SvgNest.config({
-      spacing: 0,           // No spacing (same as single-bin default)
+      spacing: 2,           // 2px spacing between parts
       rotations: 4,         // Try 4 rotations (0°, 90°, 180°, 270°)
-      populationSize: 10,   // Default population (NOT 50 - that's too slow!)
-      mutationRate: 10,     // Default mutation rate
-      useHoles: false,      // Don't use holes (adds complexity)
-      exploreConcave: false // Don't explore concave (adds complexity)
+      populationSize: 50,   // Genetic algorithm population size (larger = better exploration)
+      mutationRate: 50,     // Mutation rate for GA (higher = more exploration)
+      useHoles: true,       // Try to nest parts inside concave areas of other parts
+      exploreConcave: true  // Explore concave pockets for better nesting
     })
 
     let bestResult = null
