@@ -50,6 +50,9 @@ export const useSVGNest = () => {
     }
   }, [prevPercent, startTime])
 
+  // Track best solution to only show improvements
+  const bestSolutionRef = useRef({ bins: null, fitness: Infinity })
+
   const renderSvg = useCallback((svglist, efficiency, placed, total) => {
     setIterations(prev => {
       const newIterations = prev + 1
@@ -64,7 +67,20 @@ export const useSVGNest = () => {
       return
     }
 
-    console.log(`renderSvg called: ${svglist.length} bin(s), ${placed}/${total} shapes placed`)
+    // Calculate fitness: prioritize fewer bins, then higher efficiency
+    // Lower is better: bins count heavily, then inverse of efficiency
+    const binCount = svglist.length
+    const unplaced = total - placed
+    const currentFitness = binCount + (1 - efficiency) + (2 * unplaced)
+    
+    // Only render if this solution is better than the previous best
+    if (currentFitness >= bestSolutionRef.current.fitness) {
+      console.log(`Skipping worse solution: ${binCount} bin(s), fitness ${currentFitness.toFixed(3)} >= ${bestSolutionRef.current.fitness.toFixed(3)}`)
+      return
+    }
+
+    console.log(`NEW BEST: ${binCount} bin(s), ${placed}/${total} placed, ${(efficiency * 100).toFixed(1)}% efficiency, fitness: ${currentFitness.toFixed(3)}`)
+    bestSolutionRef.current = { bins: binCount, fitness: currentFitness }
 
     if (binsRef.current) {
       binsRef.current.innerHTML = ''
@@ -150,6 +166,9 @@ export const useSVGNest = () => {
       console.error('SvgNest not available')
       return { success: false, message: 'SVGnest not loaded' }
     }
+    
+    // Reset best solution tracker
+    bestSolutionRef.current = { bins: null, fitness: Infinity }
     
     window.SvgNest.start(progress, renderSvg)
     setIsWorking(true)

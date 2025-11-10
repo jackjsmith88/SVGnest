@@ -351,10 +351,6 @@ function App() {
         binElement.setAttribute('class', 'bin')
         window.SvgNest.setbin(binElement)
         
-        // Force spacing to 0 for precise custom shapes with real-world dimensions
-        window.SvgNest.config({ spacing: 0 })
-        console.log('Set spacing to 0 for custom shapes')
-        
         setBinSelected(true)
         console.log('Auto-selected bin from custom shapes, total shapes:', totalShapes)
       }
@@ -413,18 +409,33 @@ function App() {
     const config = {}
     const inputs = document.querySelectorAll('#config input')
     
+    console.log('=== SAVING CONFIG ===')
+    console.log('Found inputs:', inputs.length)
+    
     inputs.forEach(input => {
       const key = input.getAttribute('data-config')
       if (key) {
         if (input.type === 'checkbox') {
           config[key] = input.checked
+          console.log(`  ${key} (checkbox): ${input.checked}`)
         } else {
           config[key] = parseFloat(input.value) || input.value
+          console.log(`  ${key}: ${input.value} -> ${config[key]}`)
         }
       }
     })
 
+    console.log('Final config object:', config)
+
+    // Save to SVGnest
     window.SvgNest.config(config)
+    console.log('Applied to SvgNest.config()')
+    
+    // Persist to localStorage
+    localStorage.setItem('svgnest-config', JSON.stringify(config))
+    console.log('Saved to localStorage as:', localStorage.getItem('svgnest-config'))
+    console.log('=====================')
+    
     setMessage('Configuration saved')
     setMessageClass(MESSAGE_TYPES.SUCCESS)
   }

@@ -1,8 +1,40 @@
+import { useEffect, useRef } from 'react'
+
 function Configuration({ visible, onSave }) {
+  const configRef = useRef(null)
+
+  // Load saved config from localStorage when visible
+  useEffect(() => {
+    if (!visible || !configRef.current) return
+
+    const savedConfig = localStorage.getItem('svgnest-config')
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig)
+        const inputs = configRef.current.querySelectorAll('input')
+        
+        inputs.forEach(input => {
+          const key = input.getAttribute('data-config')
+          if (key && config[key] !== undefined) {
+            if (input.type === 'checkbox') {
+              input.checked = config[key]
+            } else {
+              input.value = config[key]
+            }
+          }
+        })
+        
+        console.log('Loaded config from localStorage:', config)
+      } catch (e) {
+        console.error('Failed to load config:', e)
+      }
+    }
+  }, [visible]) // Re-run when visibility changes
+
   if (!visible) return null
 
   return (
-    <div id="config" className={visible ? 'active' : ''}>
+    <div id="config" className={visible ? 'active' : ''} ref={configRef}>
       <div id="configwrapper">
         <input type="text" defaultValue="0" data-config="spacing" />
         <h3>Space between parts</h3>
@@ -12,7 +44,7 @@ function Configuration({ visible, onSave }) {
         <h3>Curve tolerance</h3>
         <span className="tooltip" title="The maximum error allowed when converting Beziers and arcs to line segments">?</span>
 
-  <input type="text" defaultValue="10000000" data-config="clipperScale" />
+  <input type="text" defaultValue="100000000" data-config="clipperScale" />
   <h3>Clipper scale</h3>
   <span className="tooltip" title="Internal precision multiplier used by the Clipper geometry engine">?</span>
 
