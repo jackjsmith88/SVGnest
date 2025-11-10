@@ -118,173 +118,181 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
     <div className="custom-shape-builder">
       <h3>Custom Shape Builder</h3>
       
-      {/* Bin Configuration */}
-      <div className="section">
-        <h4>Bin Configuration</h4>
-        <div className="form-group">
-          <label>Bin Preset:</label>
-          <select value={binPreset} onChange={(e) => setBinPreset(e.target.value)}>
-            {Object.entries(PRESETS).map(([key, preset]) => (
-              <option key={key} value={key}>{preset.name}</option>
-            ))}
-            <option value="CUSTOM">Custom Size</option>
-          </select>
-        </div>
-        
-        {binPreset === 'CUSTOM' && (
-          <div className="form-row">
+      <div className="main-content">
+        {/* Left Panel - Bin Config and Preview */}
+        <div className="left-panel">
+          {/* Bin Configuration */}
+          <div className="section">
+            <h4>Bin Configuration</h4>
             <div className="form-group">
-              <label>Width (cm):</label>
-              <input 
-                type="number" 
-                value={customBinWidth} 
-                onChange={(e) => setCustomBinWidth(parseFloat(e.target.value))}
-              />
+              <label>Bin Preset:</label>
+              <select value={binPreset} onChange={(e) => setBinPreset(e.target.value)}>
+                {Object.entries(PRESETS).map(([key, preset]) => (
+                  <option key={key} value={key}>{preset.name}</option>
+                ))}
+                <option value="CUSTOM">Custom Size</option>
+              </select>
             </div>
-            <div className="form-group">
-              <label>Height (cm):</label>
-              <input 
-                type="number" 
-                value={customBinHeight} 
-                onChange={(e) => setCustomBinHeight(parseFloat(e.target.value))}
-              />
-            </div>
+            
+            {binPreset === 'CUSTOM' && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Width (cm):</label>
+                  <input 
+                    type="number" 
+                    value={customBinWidth} 
+                    onChange={(e) => setCustomBinWidth(parseFloat(e.target.value))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Height (cm):</label>
+                  <input 
+                    type="number" 
+                    value={customBinHeight} 
+                    onChange={(e) => setCustomBinHeight(parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      
-      {/* Shape Definition */}
-      <div className="section">
-        <h4>Add Shapes</h4>
-        <div className="form-group">
-          <label>Shape Type:</label>
-          <select value={shapeType} onChange={(e) => setShapeType(e.target.value)}>
-            <option value="rectangle">Rectangle</option>
-            <option value="lshape">L-Shape</option>
-          </select>
-        </div>
-        
-        {shapeType === 'rectangle' && (
-          <div className="form-row">
-            <div className="form-group">
-              <label>Width (cm):</label>
-              <input 
-                type="number" 
-                value={rectWidth} 
-                onChange={(e) => setRectWidth(parseFloat(e.target.value))}
+          
+          {/* Preview */}
+          {shapes.length > 0 && (
+            <div className="section">
+              <h4>Preview</h4>
+              <div 
+                className="preview-container"
+                dangerouslySetInnerHTML={{ __html: getPreviewSVG() }}
               />
             </div>
-            <div className="form-group">
-              <label>Height (cm):</label>
-              <input 
-                type="number" 
-                value={rectHeight} 
-                onChange={(e) => setRectHeight(parseFloat(e.target.value))}
-              />
-            </div>
-          </div>
-        )}
-        
-        {shapeType === 'lshape' && (
-          <>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Total Width (cm):</label>
-                <input 
-                  type="number" 
-                  value={lTotalWidth} 
-                  onChange={(e) => setLTotalWidth(parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label>Total Height (cm):</label>
-                <input 
-                  type="number" 
-                  value={lTotalHeight} 
-                  onChange={(e) => setLTotalHeight(parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Arm Width (cm):</label>
-                <input 
-                  type="number" 
-                  value={lArmWidth} 
-                  onChange={(e) => setLArmWidth(parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="form-group">
-                <label>Arm Height (cm):</label>
-                <input 
-                  type="number" 
-                  value={lArmHeight} 
-                  onChange={(e) => setLArmHeight(parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-          </>
-        )}
-        
-        <div className="form-group">
-          <label>Quantity:</label>
-          <input 
-            type="number" 
-            min="1" 
-            value={quantity} 
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-          />
-        </div>
-        
-        <button onClick={handleAddShape} className="btn-add">
-          Add Shape ({quantity}x)
-        </button>
-      </div>
-      
-      {/* Shapes List */}
-      <div className="section">
-        <h4>Shapes List ({shapes.length} total)</h4>
-        <div className="shapes-list">
-          {shapes.length === 0 ? (
-            <p className="empty-message">No shapes added yet</p>
-          ) : (
-            shapes.map((shape, index) => (
-              <div key={index} className="shape-item">
-                <span>{shape.description}</span>
-                <button onClick={() => handleRemoveShape(index)} className="btn-remove">×</button>
-              </div>
-            ))
           )}
         </div>
-      </div>
-      
-      {/* Preview */}
-      {shapes.length > 0 && (
-        <div className="section">
-          <h4>Preview</h4>
-          <div 
-            className="preview-container"
-            dangerouslySetInnerHTML={{ __html: getPreviewSVG() }}
-          />
+        
+        {/* Right Panel - Shape Definition and List */}
+        <div className="right-panel">
+          {/* Shape Definition */}
+          <div className="section">
+            <h4>Add Shapes</h4>
+            <div className="form-group">
+              <label>Shape Type:</label>
+              <select value={shapeType} onChange={(e) => setShapeType(e.target.value)}>
+                <option value="rectangle">Rectangle</option>
+                <option value="lshape">L-Shape</option>
+              </select>
+            </div>
+            
+            {shapeType === 'rectangle' && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Width (cm):</label>
+                  <input 
+                    type="number" 
+                    value={rectWidth} 
+                    onChange={(e) => setRectWidth(parseFloat(e.target.value))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Height (cm):</label>
+                  <input 
+                    type="number" 
+                    value={rectHeight} 
+                    onChange={(e) => setRectHeight(parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {shapeType === 'lshape' && (
+              <>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Total Width (cm):</label>
+                    <input 
+                      type="number" 
+                      value={lTotalWidth} 
+                      onChange={(e) => setLTotalWidth(parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Total Height (cm):</label>
+                    <input 
+                      type="number" 
+                      value={lTotalHeight} 
+                      onChange={(e) => setLTotalHeight(parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Arm Width (cm):</label>
+                    <input 
+                      type="number" 
+                      value={lArmWidth} 
+                      onChange={(e) => setLArmWidth(parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Arm Height (cm):</label>
+                    <input 
+                      type="number" 
+                      value={lArmHeight} 
+                      onChange={(e) => setLArmHeight(parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+            
+            <div className="form-group">
+              <label>Quantity:</label>
+              <input 
+                type="number" 
+                min="1" 
+                value={quantity} 
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              />
+            </div>
+            
+            <button onClick={handleAddShape} className="btn-add">
+              Add Shape ({quantity}x)
+            </button>
+          </div>
+          
+          {/* Shapes List */}
+          <div className="section">
+            <h4>Shapes List ({shapes.length} total)</h4>
+            <div className="shapes-list">
+              {shapes.length === 0 ? (
+                <p className="empty-message">No shapes added yet</p>
+              ) : (
+                shapes.map((shape, index) => (
+                  <div key={index} className="shape-item">
+                    <span>{shape.description}</span>
+                    <button onClick={() => handleRemoveShape(index)} className="btn-remove">×</button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          
+          {/* Actions */}
+          <div className="section actions">
+            <button 
+              onClick={handleGenerateSVG} 
+              className="btn-generate"
+              disabled={shapes.length === 0}
+            >
+              Generate & Load SVG
+            </button>
+            <button 
+              onClick={handleClearShapes} 
+              className="btn-clear"
+              disabled={shapes.length === 0}
+            >
+              Clear All
+            </button>
+          </div>
         </div>
-      )}
-      
-      {/* Actions */}
-      <div className="section actions">
-        <button 
-          onClick={handleGenerateSVG} 
-          className="btn-generate"
-          disabled={shapes.length === 0}
-        >
-          Generate & Load SVG
-        </button>
-        <button 
-          onClick={handleClearShapes} 
-          className="btn-clear"
-          disabled={shapes.length === 0}
-        >
-          Clear All
-        </button>
       </div>
     </div>
   )

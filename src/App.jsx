@@ -264,6 +264,10 @@ function App() {
         setMessageClass(MESSAGE_TYPES.ERROR)
       } else {
         setNestingStarted(true)
+        // Hide custom builder when nesting starts
+        if (showCustomBuilder) {
+          setShowCustomBuilder(false)
+        }
       }
     }
   }
@@ -497,13 +501,14 @@ function App() {
                 borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: nestingStarted ? 'none' : 'block'
               }}
             >
               {showCustomBuilder ? 'Hide Custom Shape Builder' : 'Show Custom Shape Builder'}
             </button>
             
-            {showCustomBuilder && (
+            {showCustomBuilder && !nestingStarted && (
               <CustomShapeBuilder 
                 onShapesGenerated={handleShapesGenerated}
               />
@@ -517,11 +522,11 @@ function App() {
           <MultiBinTester />
         )}
 
-        {!showCustomBuilder && currentMode === MODES.SINGLE_BIN && (
+        {currentMode === MODES.SINGLE_BIN && (!showCustomBuilder || nestingStarted) && (
           <SVGDisplay ref={displayRef} />
         )}
         
-        {showCustomBuilder && (
+        {showCustomBuilder && !nestingStarted && (
           <div style={{ display: 'none' }}>
             <SVGDisplay ref={displayRef} />
           </div>

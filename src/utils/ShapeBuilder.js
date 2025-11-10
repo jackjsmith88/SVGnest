@@ -7,7 +7,7 @@
 export class ShapeBuilder {
   constructor(binWidthCm, binHeightCm, binWidthPx = null, binHeightPx = null) {
     // Standard DPI conversion: 96 DPI = 96 pixels per inch = 96 / 2.54 pixels per cm
-    const PX_PER_CM = 96 / 2.54 // ≈ 37.795 px/cm
+    const PX_PER_CM = 96 / 2.54 // â‰ˆ 37.795 px/cm
     
     this.binWidthCm = binWidthCm
     this.binHeightCm = binHeightCm
@@ -19,7 +19,7 @@ export class ShapeBuilder {
     // Always use standard DPI for shape conversion
     this.pxPerCm = PX_PER_CM
     
-    console.log(`ShapeBuilder initialized: ${binWidthCm}×${binHeightCm}cm -> ${this.binWidthPx}×${this.binHeightPx}px`)
+    console.log(`ShapeBuilder initialized: ${binWidthCm}Ã—${binHeightCm}cm -> ${this.binWidthPx}Ã—${this.binHeightPx}px`)
     console.log(`Scale: ${this.pxPerCm.toFixed(3)} px/cm (96 DPI standard)`)
   }
   
@@ -186,7 +186,7 @@ export class ShapeBuilder {
    */
   shapeToSVGPolygon(shape, offsetX = 0, offsetY = 0, index = 0) {
     const pointsStr = shape.points
-      .map(p => `${(p.x + offsetX).toFixed(2)},${(p.y + offsetY).toFixed(2)}`)
+      .map(p => `${(p.x + offsetX).toFixed(6)},${(p.y + offsetY).toFixed(6)}`)
       .join(' ')
     
     // Calculate center for text label
@@ -202,7 +202,7 @@ export class ShapeBuilder {
    */
   createBinSVG() {
     // Create bin as polygon so SVGnest treats it consistently
-    const points = `0,0 ${this.binWidthPx},0 ${this.binWidthPx},${this.binHeightPx} 0,${this.binHeightPx}`
+    const points = `0,0 ${this.binWidthPx.toFixed(6)},0 ${this.binWidthPx.toFixed(6)},${this.binHeightPx.toFixed(6)} 0,${this.binHeightPx.toFixed(6)}`
     return `<polygon id="bin" points="${points}" fill="none" stroke="#3bb34a" stroke-width="2"/>`
   }
   
@@ -258,24 +258,24 @@ export class ShapeBuilder {
 export const PRESETS = {
   // Standard sheet metal sizes
   SHEET_320x160: {
-    name: '320cm × 160cm Sheet',
+    name: '320cm Ã— 160cm Sheet',
     binWidthCm: 320,
     binHeightCm: 160
   },
   SHEET_244x122: {
-    name: '244cm × 122cm Sheet (8ft × 4ft)',
+    name: '244cm Ã— 122cm Sheet (8ft Ã— 4ft)',
     binWidthCm: 244,
     binHeightCm: 122
   },
   SHEET_200x100: {
-    name: '200cm × 100cm Sheet',
+    name: '200cm Ã— 100cm Sheet',
     binWidthCm: 200,
     binHeightCm: 100
   },
   
   // Custom demo bin
   DEMO: {
-    name: 'Demo Bin (40cm × 30cm)',
+    name: 'Demo Bin (40cm Ã— 30cm)',
     binWidthCm: 40,
     binHeightCm: 30
   }
