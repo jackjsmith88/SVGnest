@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import BinVisualizer from './BinVisualizer'
-import { testMultiBinNesting, createSimpleShapes } from '../utils/multiBinNesting'
+import { testMultiBinNesting, createSimpleShapes } from '..//utils/multiBinNesting'
 
 function MultiBinTester() {
   const [numBins, setNumBins] = useState(3)
