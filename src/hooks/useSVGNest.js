@@ -25,15 +25,18 @@ export const useSVGNest = () => {
   // Define progress and renderSvg functions first
   const progress = useCallback((percent) => {
     const transition = percent > prevPercent ? '; transition: width 0.1s' : ''
-    const progressBar = document.getElementById('info_progress')
-    const infoPanel = document.getElementById('info')
+    const progressBar = document.getElementById('info_progress_bar')
+    const infoPanel = document.getElementById('progress-panel')
     const timeDisplay = document.getElementById('info_time')
     
+    // Update Bootstrap progress bar
     if (progressBar) {
-      progressBar.setAttribute('style', 'width: ' + Math.round(percent * 100) + '% ' + transition)
+      progressBar.style.width = Math.round(percent * 100) + '%'
+      progressBar.setAttribute('aria-valuenow', Math.round(percent * 100))
     }
+    
     if (infoPanel) {
-      infoPanel.setAttribute('style', 'display: block')
+      infoPanel.style.display = 'block'
     }
 
     setPrevPercent(percent)
@@ -45,13 +48,13 @@ export const useSVGNest = () => {
       timeDisplay.innerHTML = millisecondsToStr(estimate) + ' remaining'
 
       if (diff > 5000 && percent < 0.3 && percent > 0.02 && estimate > 10000) {
-        timeDisplay.setAttribute('style', 'display: block')
+        timeDisplay.style.display = 'block'
       }
     }
 
     if (timeDisplay) {
       if (percent > 0.95 || percent < 0.02) {
-        timeDisplay.setAttribute('style', 'display: none')
+        timeDisplay.style.display = 'none'
       }
     }
     
@@ -66,7 +69,7 @@ export const useSVGNest = () => {
   const renderSvg = useCallback((svglist, efficiency, placed, total) => {
     setIterations(prev => {
       const newIterations = prev + 1
-      const iterationsDisplay = document.getElementById('info_iterations')
+      const iterationsDisplay = document.getElementById('info_iterations_display')
       if (iterationsDisplay) {
         iterationsDisplay.innerHTML = newIterations
       }
@@ -123,11 +126,11 @@ export const useSVGNest = () => {
     }
     
     if (placementDisplay) {
-      placementDisplay.setAttribute('style', 'display: block')
+      placementDisplay.style.display = 'block'
     }
     
     if (displayRef.current) {
-      displayRef.current.setAttribute('style', 'display: none')
+      displayRef.current.style.display = 'none'
     }
     
     // Enable download button when nesting results are available

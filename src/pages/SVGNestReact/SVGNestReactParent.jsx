@@ -3,11 +3,11 @@ import '../../styles/App.css'
 
 // Components
 import SplashScreen from './Splash/SplashScreen'
-import Controls from './Components/Navigation/Controls'
+import MainToolbar from './Components/Toolbar/MainToolbar'
 import Configuration from './SingleBin/Configuration'
-import ProgressSidebar from './SingleBin/ProgressSidebar'
+import ProgressPanel from './Components/Progress/ProgressPanel'
 import SVGDisplay from './SingleBin/SVGDisplay'
-import { ShapeControls } from './SingleBin/ShapeControls'
+import ShapeManager from './Components/ShapeManager/ShapeManager'
 import CustomShapeBuilder from './SingleBin/CustomShapeBuilder'
 
 // Hooks
@@ -176,7 +176,7 @@ function SVGNestReactParent() {
       )}
 
       <div id="svgnest" style={{ display: showSplash ? 'none' : 'block' }}>
-        <Controls
+        <MainToolbar
           isWorking={isWorking}
           binSelected={binSelected}
           downloadReady={downloadReady}
@@ -196,8 +196,7 @@ function SVGNestReactParent() {
         />
 
         {!showCustomBuilder && (
-          <ShapeControls
-            onShapeMultiplierChange={() => {}}
+          <ShapeManager
             onFileLoad={loadCustomFile}
             onDemoLoad={loadDemo}
           />
@@ -227,7 +226,7 @@ function SVGNestReactParent() {
           />
         )}
 
-        <ProgressSidebar iterations={iterations} />
+        <ProgressPanel iterations={iterations} />
 
         {(!showCustomBuilder || nestingStarted) && (
           <SVGDisplay ref={displayRef} />
