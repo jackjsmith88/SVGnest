@@ -88,15 +88,15 @@ export class ShapeBuilder {
     const inset = this.shapeInset
     
     // L-shape points (COUNTER-CLOCKWISE from top-left) - SVGnest requires CCW for proper NFP
-    // STROKE COMPENSATION: All polygon edges get inset by 0.5px to compensate for 1px stroke
-    // For the inner corner (concave notch), BOTH edges move inward, so we ADD inset to both x and y
+    // STROKE COMPENSATION: Outer corners move inward, inner corner moves outward
+    // This ensures the visual size matches the geometric size for proper nesting
     const points = [
-      { x: inset, y: inset },                      // 1. Top-left (outer corner: inset both)
-      { x: inset, y: h - inset },                  // 2. Bottom-left (outer corner: inset both)
-      { x: w - inset, y: h - inset },              // 3. Bottom-right (outer corner: inset both)
-      { x: w - inset, y: h - ah + inset },         // 4. Horizontal arm top edge (inset from bottom)
-      { x: aw + inset, y: h - ah + inset },        // 5. Inner corner (concave: ADD inset to shrink cavity)
-      { x: aw + inset, y: inset }                  // 6. Vertical arm right edge (inset from left)
+      { x: inset, y: inset },                      // 1. Top-left (outer corner)
+      { x: inset, y: h - inset },                  // 2. Bottom-left (outer corner)
+      { x: w - inset, y: h - inset },              // 3. Bottom-right (outer corner)
+      { x: w - inset, y: h - ah + inset },         // 4. Right edge of notch (inset from bottom)
+      { x: aw - inset, y: h - ah - inset },        // 5. Inner corner (ENLARGE cavity by subtracting inset)
+      { x: aw - inset, y: inset }                  // 6. Left edge of top arm (inset from right)
     ]
     
     // Calculate actual bounding box
