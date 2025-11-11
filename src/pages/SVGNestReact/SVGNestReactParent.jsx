@@ -3,12 +3,10 @@ import '../../styles/App.css'
 
 // Components
 import SplashScreen from './Splash/SplashScreen'
-import ModeSwitcher from './Components/Navigation/ModeSwitcher'
 import Controls from './Components/Navigation/Controls'
 import Configuration from './SingleBin/Configuration'
 import ProgressSidebar from './SingleBin/ProgressSidebar'
 import SVGDisplay from './SingleBin/SVGDisplay'
-import MultiBinTester from './MultiBin/MultiBinTester'
 import { ShapeControls } from './SingleBin/ShapeControls'
 import CustomShapeBuilder from './SingleBin/CustomShapeBuilder'
 
@@ -21,13 +19,10 @@ import { useConfiguration } from '../../hooks/useConfiguration'
 import { useUIState } from '../../hooks/useUIState'
 
 // Utils
-import { MODES, MESSAGE_TYPES } from '../../utils/constants'
+import { MESSAGE_TYPES } from '../../utils/constants'
 
 
 function SVGNestReactParent() {
-  // Mode state
-  const [currentMode, setCurrentMode] = useState(MODES.SINGLE_BIN)
-  
   // File input ref
   const fileInputRef = useRef(null)
 
@@ -154,7 +149,6 @@ function SVGNestReactParent() {
 
   const handleExit = () => {
     setShowSplash(true)
-    setCurrentMode(MODES.SINGLE_BIN)
     setBinSelected(false)
     setMessage('')
     setMessageClass('')
@@ -191,54 +185,41 @@ function SVGNestReactParent() {
           onClose={toggleConfig}
         />
 
-        <ModeSwitcher 
-          currentMode={currentMode} 
-          onModeChange={setCurrentMode} 
-        />
-
-        {currentMode === MODES.SINGLE_BIN && (
-          <>
-            {!showCustomBuilder && (
-              <ShapeControls
-                onShapeMultiplierChange={() => {}}
-                onFileLoad={loadCustomFile}
-                onDemoLoad={loadDemo}
-              />
-            )}
-            
-            <button 
-              onClick={toggleCustomBuilder}
-              style={{
-                margin: '10px 20px',
-                padding: '10px 20px',
-                backgroundColor: showCustomBuilder ? '#f44336' : '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: nestingStarted ? 'none' : 'block'
-              }}
-            >
-              {showCustomBuilder ? 'Hide Custom Shape Builder' : 'Show Custom Shape Builder'}
-            </button>
-            
-            {showCustomBuilder && !nestingStarted && (
-              <CustomShapeBuilder 
-                onShapesGenerated={handleShapesGenerated}
-              />
-            )}
-          </>
+        {!showCustomBuilder && (
+          <ShapeControls
+            onShapeMultiplierChange={() => {}}
+            onFileLoad={loadCustomFile}
+            onDemoLoad={loadDemo}
+          />
+        )}
+        
+        <button 
+          onClick={toggleCustomBuilder}
+          style={{
+            margin: '10px 20px',
+            padding: '10px 20px',
+            backgroundColor: showCustomBuilder ? '#f44336' : '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: nestingStarted ? 'none' : 'block'
+          }}
+        >
+          {showCustomBuilder ? 'Hide Custom Shape Builder' : 'Show Custom Shape Builder'}
+        </button>
+        
+        {showCustomBuilder && !nestingStarted && (
+          <CustomShapeBuilder 
+            onShapesGenerated={handleShapesGenerated}
+          />
         )}
 
         <ProgressSidebar iterations={iterations} />
 
-        {currentMode === MODES.MULTI_BIN && (
-          <MultiBinTester />
-        )}
-
-        {currentMode === MODES.SINGLE_BIN && (!showCustomBuilder || nestingStarted) && (
+        {(!showCustomBuilder || nestingStarted) && (
           <SVGDisplay ref={displayRef} />
         )}
         
@@ -251,7 +232,7 @@ function SVGNestReactParent() {
         <div 
           id="bins" 
           ref={binsRef} 
-          style={{ display: currentMode === MODES.SINGLE_BIN && nestingStarted && !showCustomBuilder ? 'block' : 'none' }}
+          style={{ display: nestingStarted && !showCustomBuilder ? 'block' : 'none' }}
         ></div>
 
         <input

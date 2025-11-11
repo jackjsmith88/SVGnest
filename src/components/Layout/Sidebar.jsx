@@ -17,6 +17,12 @@ export default function Sidebar() {
       icon: '📐',
       description: 'Nest SVG shapes'
     },
+        { 
+      path: '/svgnest-testing', 
+      label: 'SVG Nest Testing', 
+      icon: '📐',
+      description: 'Test SVG nesting'
+    },
   ]
 
   return (
