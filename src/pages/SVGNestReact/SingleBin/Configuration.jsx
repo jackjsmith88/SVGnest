@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
+import { Form, Button, Card, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
-function Configuration({ visible, onSave }) {
+function Configuration({ visible, onSave, onClose }) {
   const configRef = useRef(null)
 
   // Load saved config from localStorage when visible
@@ -29,47 +31,298 @@ function Configuration({ visible, onSave }) {
         console.error('Failed to load config:', e)
       }
     }
-  }, [visible]) // Re-run when visibility changes
+  }, [visible])
 
   if (!visible) return null
 
+  const tooltipInfo = (text) => <Tooltip>{text}</Tooltip>
+
+  const handleBackdropClick = (e) => {
+    // Close if clicking the backdrop (not the card)
+    if (e.target === e.currentTarget && onClose) {
+      onClose()
+    }
+  }
+
   return (
-    <div id="config" className={visible ? 'active' : ''} ref={configRef}>
-      <div id="configwrapper">
-        <input type="text" defaultValue="0" data-config="spacing" />
-        <h3>Space between parts</h3>
-        <span className="tooltip" title="The space between parts in SVG units">?</span>
+    <div 
+      onClick={handleBackdropClick}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '20px'
+      }}
+    >
+      <Card 
+        ref={configRef}
+        style={{
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+          border: '1px solid rgba(148, 163, 184, 0.2)'
+        }}
+        bg="dark"
+        text="light"
+      >
+        <Card.Header style={{ 
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h4 className="mb-0">SVGnest Configuration</h4>
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                fontSize: '24px',
+                cursor: 'pointer',
+                padding: '0',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '4px',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(148, 163, 184, 0.1)'
+                e.currentTarget.style.color = '#f8fafc'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'none'
+                e.currentTarget.style.color = '#94a3b8'
+              }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          )}
+        </Card.Header>
+        
+        <Card.Body>
+          <Form>
+            {/* Spacing */}
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center gap-2">
+                Space between parts
+                <OverlayTrigger placement="right" overlay={tooltipInfo("The space between parts in SVG units")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </Form.Label>
+              <Form.Control 
+                type="text" 
+                defaultValue="0" 
+                data-config="spacing"
+                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+              />
+            </Form.Group>
 
-  <input type="text" defaultValue="0.3" data-config="curveTolerance" />
-        <h3>Curve tolerance</h3>
-        <span className="tooltip" title="The maximum error allowed when converting Beziers and arcs to line segments">?</span>
+            {/* Curve Tolerance */}
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center gap-2">
+                Curve tolerance
+                <OverlayTrigger placement="right" overlay={tooltipInfo("The maximum error allowed when converting Beziers and arcs to line segments")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </Form.Label>
+              <Form.Control 
+                type="text" 
+                defaultValue="0.3" 
+                data-config="curveTolerance"
+                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+              />
+            </Form.Group>
 
-  <input type="text" defaultValue="100000000" data-config="clipperScale" />
-  <h3>Clipper scale</h3>
-  <span className="tooltip" title="Internal precision multiplier used by the Clipper geometry engine">?</span>
+            {/* Clipper Scale */}
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center gap-2">
+                Clipper scale
+                <OverlayTrigger placement="right" overlay={tooltipInfo("Internal precision multiplier used by the Clipper geometry engine")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </Form.Label>
+              <Form.Control 
+                type="text" 
+                defaultValue="100000000" 
+                data-config="clipperScale"
+                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+              />
+            </Form.Group>
 
-        <input type="text" defaultValue="4" data-config="rotations" />
-        <h3>Part rotations</h3>
-        <span className="tooltip" title="Number of rotations to consider when inserting a part">?</span>
+            {/* Part Rotations */}
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center gap-2">
+                Part rotations
+                <OverlayTrigger placement="right" overlay={tooltipInfo("Number of rotations to consider when inserting a part")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </Form.Label>
+              <Form.Control 
+                type="text" 
+                defaultValue="4" 
+                data-config="rotations"
+                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+              />
+            </Form.Group>
 
-        <input type="text" defaultValue="10" data-config="populationSize" />
-        <h3>GA population</h3>
-        <span className="tooltip" title="The number of solutions in the Genetic Algorithm population">?</span>
+            {/* GA Population */}
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center gap-2">
+                GA population
+                <OverlayTrigger placement="right" overlay={tooltipInfo("The number of solutions in the Genetic Algorithm population")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </Form.Label>
+              <Form.Control 
+                type="text" 
+                defaultValue="10" 
+                data-config="populationSize"
+                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+              />
+            </Form.Group>
 
-        <input type="text" defaultValue="10" data-config="mutationRate" />
-        <h3>GA mutation rate</h3>
-        <span className="tooltip" title="Mutation rate (in percent) at each generation of the Genetic Algorithm">?</span>
+            {/* GA Mutation Rate */}
+            <Form.Group className="mb-3">
+              <Form.Label className="d-flex align-items-center gap-2">
+                GA mutation rate
+                <OverlayTrigger placement="right" overlay={tooltipInfo("Mutation rate (in percent) at each generation of the Genetic Algorithm")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </Form.Label>
+              <Form.Control 
+                type="text" 
+                defaultValue="10" 
+                data-config="mutationRate"
+                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+              />
+            </Form.Group>
 
-        <input type="checkbox" className="checkbox" data-config="useHoles" />
-        <h3>Part in Part</h3>
-        <span className="tooltip" title="Place parts in the holes of other parts">?</span>
+            <hr style={{ borderColor: '#475569', margin: '20px 0' }} />
 
-        <input type="checkbox" className="checkbox" data-config="exploreConcave" />
-        <h3>Explore concave areas</h3>
-        <span className="tooltip" title="Try to solve for enclosed concave areas">?</span>
+            {/* Part in Part */}
+            <Form.Group className="mb-3">
+              <div className="d-flex align-items-center gap-2">
+                <Form.Check 
+                  type="checkbox" 
+                  data-config="useHoles"
+                  id="useHoles"
+                  label="Part in Part"
+                  style={{ color: '#e5e7eb' }}
+                />
+                <OverlayTrigger placement="right" overlay={tooltipInfo("Place parts in the holes of other parts")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </div>
+            </Form.Group>
 
-        <a href="#" className="button" onClick={onSave}>Save Settings</a>
-      </div>
+            {/* Explore Concave */}
+            <Form.Group className="mb-3">
+              <div className="d-flex align-items-center gap-2">
+                <Form.Check 
+                  type="checkbox" 
+                  data-config="exploreConcave"
+                  id="exploreConcave"
+                  label="Explore concave areas"
+                  style={{ color: '#e5e7eb' }}
+                />
+                <OverlayTrigger placement="right" overlay={tooltipInfo("Try to solve for enclosed concave areas")}>
+                  <span style={{ 
+                    cursor: 'help', 
+                    color: '#60a5fa',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>ⓘ</span>
+                </OverlayTrigger>
+              </div>
+            </Form.Group>
+          </Form>
+        </Card.Body>
+
+        <Card.Footer style={{ 
+          background: '#0f172a',
+          borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+          display: 'flex',
+          gap: '10px',
+          justifyContent: 'flex-end'
+        }}>
+          {onClose && (
+            <Button 
+              variant="outline-secondary" 
+              onClick={onClose}
+              style={{
+                borderColor: '#475569',
+                color: '#94a3b8',
+                fontWeight: '600'
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button 
+            variant="primary" 
+            onClick={onSave}
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              border: 'none',
+              fontWeight: '600'
+            }}
+          >
+            Save Settings
+          </Button>
+        </Card.Footer>
+      </Card>
     </div>
   )
 }
