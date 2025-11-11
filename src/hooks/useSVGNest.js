@@ -167,6 +167,26 @@ export const useSVGNest = () => {
       return { success: false, message: 'SVGnest not loaded' }
     }
     
+    // Apply current config from UI before starting
+    const config = {}
+    const inputs = document.querySelectorAll('#config input')
+    
+    inputs.forEach(input => {
+      const key = input.getAttribute('data-config')
+      if (key) {
+        if (input.type === 'checkbox') {
+          config[key] = input.checked
+        } else {
+          config[key] = parseFloat(input.value) || input.value
+        }
+      }
+    })
+    
+    if (Object.keys(config).length > 0) {
+      console.log('Applying config before nest:', config)
+      window.SvgNest.config(config)
+    }
+    
     // Reset best solution tracker
     bestSolutionRef.current = { bins: null, fitness: Infinity }
     
