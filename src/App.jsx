@@ -16,31 +16,39 @@ import CustomShapeBuilder from './components/SingleBin/CustomShapeBuilder'
 import { useScriptLoader } from './hooks/useScriptLoader'
 import { useFileHandler } from './hooks/useFileHandler'
 import { useSVGNest } from './hooks/useSVGNest'
+import { useSVGLoader } from './hooks/useSVGLoader'
+import { useConfiguration } from './hooks/useConfiguration'
+import { useUIState } from './hooks/useUIState'
 
 // Utils
 import { MODES, MESSAGE_TYPES } from './utils/constants'
 
 
-
 function App() {
-  // UI State
-  const [showSplash, setShowSplash] = useState(true)
-  const [faqVisible, setFaqVisible] = useState(false)
-  const [configVisible, setConfigVisible] = useState(false)
+  // Mode state
   const [currentMode, setCurrentMode] = useState(MODES.SINGLE_BIN)
-  const [zoomLevel, setZoomLevel] = useState(1.0)
-  const [message, setMessage] = useState('')
-  const [messageClass, setMessageClass] = useState('')
-  const [customShapesLoaded, setCustomShapesLoaded] = useState(false)
-  const [nestingStarted, setNestingStarted] = useState(false)
-  const [showCustomBuilder, setShowCustomBuilder] = useState(false)
-
+  
   // File input ref
   const fileInputRef = useRef(null)
 
-  // Custom hooks
+  // UI state hook
+  const {
+    showSplash, setShowSplash,
+    faqVisible, setFaqVisible,
+    configVisible, setConfigVisible,
+    message, setMessage,
+    messageClass, setMessageClass,
+    customShapesLoaded, setCustomShapesLoaded,
+    nestingStarted, setNestingStarted,
+    showCustomBuilder, setShowCustomBuilder,
+    handleZoomIn, handleZoomOut,
+    toggleConfig, toggleCustomBuilder
+  } = useUIState()
+
+  // Script loader
   const { scriptsLoaded, loadingError } = useScriptLoader()
   
+  // SVGnest core hook
   const {
     isWorking,
     downloadReady, 
@@ -55,6 +63,24 @@ function App() {
     attachSvgListeners
   } = useSVGNest()
 
+  // Configuration hook
+  const { saveConfig } = useConfiguration({
+    setMessage,
+    setMessageClass,
+    MESSAGE_TYPES
+  })
+
+  // SVG loader hook
+  const { loadDemo, loadCustomFile, loadCustomShapes } = useSVGLoader({
+    displayRef,
+    attachSvgListeners,
+    setBinSelected,
+    setMessage,
+    setMessageClass,
+    MESSAGE_TYPES
+  })
+
+  // File handler hook
   const { handleFileChange, handleDragOver, handleDrop } = useFileHandler({
     setMessage,
     setMessageClass,
@@ -71,172 +97,13 @@ function App() {
       setMessage('SVGnest ready! Click Demo or Upload SVG to start')
       setMessageClass(MESSAGE_TYPES.SUCCESS)
     }
-  }, [scriptsLoaded, loadingError])
+  }, [scriptsLoaded, loadingError, setMessage, setMessageClass])
 
-  // Event handlers
-  const handleDemoLoad = (multiplier = 1) => {
-    console.log(`Loading demo with ${multiplier}x multiplier`)
-    
-    if (!scriptsLoaded) {
-      setMessage('SVGnest not loaded yet. Please wait...')
-      setMessageClass(MESSAGE_TYPES.ERROR)
-      return
-    }
-
-    // Load demo SVG
-    const displayElement = displayRef.current
-    if (displayElement && window.SvgNest) {
-      try {
-        // Parse the SVG content
-        const svg = window.SvgNest.parsesvg(displayElement.innerHTML)
-        
-        // Duplicate shapes based on multiplier
-        if (multiplier > 1) {
-          const shapes = []
-          const allElements = svg.querySelectorAll('*')
-          
-          // Find the bin element - it's typically the largest rect or has specific attributes
-          let binElement = null
-          const rects = svg.querySelectorAll('rect')
-          
-          // The bin is usually the largest rect or one without fill
-          rects.forEach(rect => {
-            const width = parseFloat(rect.getAttribute('width'))
-            const height = parseFloat(rect.getAttribute('height'))
-            // Bin is typically much larger (>400px) and has no fill or white fill
-            if (width > 400 || height > 300) {
-              binElement = rect
-            }
-          })
-          
-          allElements.forEach(el => {
-            const id = el.getAttribute('id')
-            // Skip the bin element and elements with 'bin' in their id
-            if (el === binElement || (id && id.toLowerCase().includes('bin'))) {
-              return
-            }
-            
-            if (el.tagName === 'polygon' || el.tagName === 'rect' || el.tagName === 'path' || el.tagName === 'polyline') {
-              shapes.push(el)
-            }
-          })
-          
-          console.log(`Found ${shapes.length} shapes, duplicating ${multiplier - 1} times`)
-          
-          // Clone shapes (multiplier - 1) times
-          let idCounter = shapes.length
-          shapes.forEach(shape => {
-            for (let i = 0; i < multiplier - 1; i++) {
-              const clone = shape.cloneNode(true)
-              const originalId = clone.getAttribute('id')
-              if (originalId) {
-                clone.setAttribute('id', `${originalId}-copy${i + 1}`)
-              } else {
-                clone.setAttribute('id', `shape-${idCounter++}`)
-              }
-              svg.appendChild(clone)
-            }
-          })
-          
-          console.log(`Total shapes after duplication: ${shapes.length * multiplier}`)
-        }
-        
-        displayElement.innerHTML = ''
-        displayElement.appendChild(svg)
-        
-        // Attach event listeners for SVG selection
-        attachSvgListeners(svg)
-        
-        const totalShapes = svg.querySelectorAll('polygon, rect, path, polyline').length
-        setMessage(`Demo loaded with ${totalShapes} shapes. Click on the outline to use as the bin`)
-        setMessageClass(MESSAGE_TYPES.SUCCESS)
-      } catch (e) {
-        setMessage(e.toString())
-        setMessageClass(MESSAGE_TYPES.ERROR)
-        return
-      }
-    }
-    
-    setShowSplash(false)
-  }
-
-  const handleCustomFileLoad = (svgContent, multiplier = 1) => {
-    console.log(`Loading custom SVG with ${multiplier}x multiplier`)
-    
-    if (!window.SvgNest) {
-      setMessage('SVGnest not loaded yet. Please wait...')
-      setMessageClass(MESSAGE_TYPES.ERROR)
-      return
-    }
-
-    const displayElement = displayRef.current
-    if (displayElement) {
-      try {
-        const svg = window.SvgNest.parsesvg(svgContent)
-        
-        // Duplicate shapes if needed
-        if (multiplier > 1) {
-          const shapes = []
-          const allElements = svg.querySelectorAll('*')
-          
-          // Find the bin element - it's typically the largest rect
-          let binElement = null
-          const rects = svg.querySelectorAll('rect')
-          
-          rects.forEach(rect => {
-            const width = parseFloat(rect.getAttribute('width'))
-            const height = parseFloat(rect.getAttribute('height'))
-            if (width > 400 || height > 300) {
-              binElement = rect
-            }
-          })
-          
-          allElements.forEach(el => {
-            const id = el.getAttribute('id')
-            // Skip the bin element and elements with 'bin' in their id
-            if (el === binElement || (id && id.toLowerCase().includes('bin'))) {
-              return
-            }
-            
-            if (el.tagName === 'polygon' || el.tagName === 'rect' || el.tagName === 'path' || el.tagName === 'polyline') {
-              shapes.push(el)
-            }
-          })
-          
-          let idCounter = shapes.length
-          shapes.forEach(shape => {
-            for (let i = 0; i < multiplier - 1; i++) {
-              const clone = shape.cloneNode(true)
-              const originalId = clone.getAttribute('id')
-              if (originalId) {
-                clone.setAttribute('id', `${originalId}-copy${i + 1}`)
-              } else {
-                clone.setAttribute('id', `shape-${idCounter++}`)
-              }
-              svg.appendChild(clone)
-            }
-          })
-        }
-        
-        displayElement.innerHTML = ''
-        displayElement.appendChild(svg)
-        
-        attachSvgListeners(svg)
-        
-        const totalShapes = svg.querySelectorAll('polygon, rect, path, polyline').length
-        setMessage(`Custom SVG loaded with ${totalShapes} shapes. Click on the outline to use as the bin`)
-        setMessageClass(MESSAGE_TYPES.SUCCESS)
-      } catch (e) {
-        setMessage(`Error loading SVG: ${e.toString()}`)
-        setMessageClass(MESSAGE_TYPES.ERROR)
-      }
-    }
-    
-    setShowSplash(false)
-  }
-
+  // Simple event handlers
   const handleDemo = () => {
-    handleDemoLoad(1)
+    if (loadDemo(1)) {
+      setShowSplash(false)
+    }
   }
 
   const handleUpload = () => {
@@ -247,7 +114,6 @@ function App() {
     }
     
     setShowSplash(false)
-    // Trigger file input
     if (fileInputRef.current) {
       fileInputRef.current.click()
     }
@@ -264,7 +130,6 @@ function App() {
         setMessageClass(MESSAGE_TYPES.ERROR)
       } else {
         setNestingStarted(true)
-        // Hide custom builder when nesting starts
         if (showCustomBuilder) {
           setShowCustomBuilder(false)
         }
@@ -281,171 +146,10 @@ function App() {
   }
 
   const handleShapesGenerated = (svgString) => {
-    console.log('Custom shapes generated:', svgString.length, 'chars')
-    
-    if (!scriptsLoaded) {
-      setMessage('SVGnest not loaded yet. Please wait...')
-      setMessageClass(MESSAGE_TYPES.ERROR)
-      return
-    }
-    
-    try {
-      const displayElement = displayRef.current
-      if (!displayElement) {
-        setMessage('Display element not found')
-        setMessageClass(MESSAGE_TYPES.ERROR)
-        return
-      }
-
-      // First, clear everything and reset state
-      displayElement.innerHTML = ''
-      setBinSelected(false)
-      
-      // Stop any running nest
-      if (window.SvgNest && isWorking) {
-        window.SvgNest.stop()
-      }
-
-      // Parse the SVG string
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(svgString, 'image/svg+xml')
-      const svg = doc.documentElement
-
-      if (svg.tagName !== 'svg') {
-        setMessage('Invalid SVG generated')
-        setMessageClass(MESSAGE_TYPES.ERROR)
-        return
-      }
-
-      // Load into display first
-      displayElement.innerHTML = ''
-      displayElement.appendChild(svg)
-      
-      // Now let SvgNest parse it from the DOM
-      const parsedSvg = window.SvgNest.parsesvg(displayElement.innerHTML)
-      
-      // Replace with parsed version
-      displayElement.innerHTML = ''
-      displayElement.appendChild(parsedSvg)
-      
-      // The bin is the first polygon (created by ShapeBuilder)
-      const allElements = parsedSvg.querySelectorAll('polygon, rect, path, polyline')
-      console.log(`Total elements after parsing: ${allElements.length}`)
-      allElements.forEach((el, i) => {
-        const points = el.getAttribute('points')
-        if (points && i > 0 && i < 3) { // Log first 2 shapes to check dimensions
-          const coords = points.split(' ').map(p => p.split(',').map(Number))
-          const width = Math.max(...coords.map(p => p[0])) - Math.min(...coords.map(p => p[0]))
-          const height = Math.max(...coords.map(p => p[1])) - Math.min(...coords.map(p => p[1]))
-          console.log(`  [${i}] ${el.tagName} id="${el.getAttribute('id')}" width=${width.toFixed(2)}px height=${height.toFixed(2)}px`)
-        } else {
-          console.log(`  [${i}] ${el.tagName} id="${el.getAttribute('id')}"`)
-        }
-      })
-      
-      const binElement = allElements[0] // First element is always the bin
-      const totalShapes = allElements.length - 1 // Exclude bin
-      
-      // Automatically select the bin and mark it
-      if (binElement && window.SvgNest) {
-        binElement.setAttribute('class', 'bin')
-        window.SvgNest.setbin(binElement)
-        
-        setBinSelected(true)
-        console.log('Auto-selected bin from custom shapes, total shapes:', totalShapes)
-      }
-      
-      // Re-apply colors and numbers to shapes (lost during parsing)
-      allElements.forEach((el, i) => {
-        if (i === 0) return // Skip bin
-        
-        // Set shape colors
-        el.setAttribute('fill', 'rgba(33, 150, 243, 0.3)')
-        el.setAttribute('stroke', '#2196F3')
-        el.setAttribute('stroke-width', '2')
-        
-        // Add number label
-        const points = el.getAttribute('points')
-        if (points) {
-          const coords = points.split(' ').map(p => p.split(',').map(Number))
-          const centerX = coords.reduce((sum, p) => sum + p[0], 0) / coords.length
-          const centerY = coords.reduce((sum, p) => sum + p[1], 0) / coords.length
-          
-          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-          text.setAttribute('x', centerX)
-          text.setAttribute('y', centerY)
-          text.setAttribute('font-size', '24')
-          text.setAttribute('font-weight', 'bold')
-          text.setAttribute('fill', '#1976D2')
-          text.setAttribute('text-anchor', 'middle')
-          text.setAttribute('dominant-baseline', 'middle')
-          text.textContent = i
-          
-          parsedSvg.appendChild(text)
-        }
-      })
-      
-      attachSvgListeners(parsedSvg)
-      
-      setMessage(`Custom shapes loaded: ${totalShapes} shapes ready for nesting. Click Start to begin!`)
-      setMessageClass(MESSAGE_TYPES.SUCCESS)
+    if (loadCustomShapes(svgString)) {
       setShowSplash(false)
       setCustomShapesLoaded(true)
-    } catch (e) {
-      setMessage(`Error loading custom shapes: ${e.toString()}`)
-      setMessageClass(MESSAGE_TYPES.ERROR)
     }
-  }
-
-  const handleConfigSave = (e) => {
-    e.preventDefault()
-    
-    if (!window.SvgNest) {
-      setMessage('SVGnest not available')
-      setMessageClass(MESSAGE_TYPES.ERROR)
-      return
-    }
-
-    const config = {}
-    const inputs = document.querySelectorAll('#config input')
-    
-    console.log('=== SAVING CONFIG ===')
-    console.log('Found inputs:', inputs.length)
-    
-    inputs.forEach(input => {
-      const key = input.getAttribute('data-config')
-      if (key) {
-        if (input.type === 'checkbox') {
-          config[key] = input.checked
-          console.log(`  ${key} (checkbox): ${input.checked}`)
-        } else {
-          config[key] = parseFloat(input.value) || input.value
-          console.log(`  ${key}: ${input.value} -> ${config[key]}`)
-        }
-      }
-    })
-
-    console.log('Final config object:', config)
-
-    // Save to SVGnest
-    window.SvgNest.config(config)
-    console.log('Applied to SvgNest.config()')
-    
-    // Persist to localStorage
-    localStorage.setItem('svgnest-config', JSON.stringify(config))
-    console.log('Saved to localStorage as:', localStorage.getItem('svgnest-config'))
-    console.log('=====================')
-    
-    setMessage('Configuration saved')
-    setMessageClass(MESSAGE_TYPES.SUCCESS)
-  }
-
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.1, 2.0))
-  }
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.1, 0.5))
   }
 
   const handleExit = () => {
@@ -475,7 +179,7 @@ function App() {
           configVisible={configVisible}
           onStart={handleStart}
           onDownload={handleDownloadClick}
-          onConfigToggle={() => setConfigVisible(!configVisible)}
+          onConfigToggle={toggleConfig}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onExit={handleExit}
@@ -483,7 +187,7 @@ function App() {
 
         <Configuration 
           visible={configVisible} 
-          onSave={handleConfigSave} 
+          onSave={saveConfig} 
         />
 
         <ModeSwitcher 
@@ -495,14 +199,14 @@ function App() {
           <>
             {!showCustomBuilder && (
               <ShapeControls
-                onShapeMultiplierChange={() => {}} // Not used - multiplier is passed on load
-                onFileLoad={handleCustomFileLoad}
-                onDemoLoad={handleDemoLoad}
+                onShapeMultiplierChange={() => {}}
+                onFileLoad={loadCustomFile}
+                onDemoLoad={loadDemo}
               />
             )}
             
             <button 
-              onClick={() => setShowCustomBuilder(!showCustomBuilder)}
+              onClick={toggleCustomBuilder}
               style={{
                 margin: '10px 20px',
                 padding: '10px 20px',
@@ -570,3 +274,7 @@ function App() {
 }
 
 export default App
+
+
+
+
