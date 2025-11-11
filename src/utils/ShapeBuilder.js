@@ -87,14 +87,15 @@ export class ShapeBuilder {
     const ah = this.cmToPx(armHeightCm)
     const inset = this.shapeInset
     
-    // L-shape points (clockwise from top-left), inset for stroke
+    // L-shape points (COUNTER-CLOCKWISE from top-left) - SVGnest requires CCW for proper NFP
+    // This is critical for interlocking - clockwise polygons can cause NFP calculation failures
     const points = [
-      { x: inset, y: inset },                      // Top-left
-      { x: aw - inset, y: inset },                 // Top-right of vertical arm
-      { x: aw - inset, y: h - ah - inset },        // Inner corner
-      { x: w - inset, y: h - ah - inset },         // Top-right of horizontal arm
-      { x: w - inset, y: h - inset },              // Bottom-right
-      { x: inset, y: h - inset }                   // Bottom-left
+      { x: inset, y: inset },                      // 1. Top-left
+      { x: inset, y: h - inset },                  // 2. Bottom-left (go down)
+      { x: w - inset, y: h - inset },              // 3. Bottom-right (go right)
+      { x: w - inset, y: h - ah - inset },         // 4. Top-right of horizontal arm (go up)
+      { x: aw - inset, y: h - ah - inset },        // 5. Inner corner (go left)
+      { x: aw - inset, y: inset }                  // 6. Top-right of vertical arm (go up)
     ]
     
     // Calculate actual bounding box

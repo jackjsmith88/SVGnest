@@ -11,7 +11,7 @@ const DEFAULT_CONFIG = {
   populationSize: 10,
   mutationRate: 10,
   useHoles: false,
-  exploreConcave: false
+  exploreConcave: true
 }
 
 // Unified styles for light theme
