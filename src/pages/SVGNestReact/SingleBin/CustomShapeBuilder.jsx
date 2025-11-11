@@ -5,12 +5,63 @@ import ShapeBuilder, { PRESETS } from '../../../utils/ShapeBuilder'
 import './CustomShapeBuilder.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+// Test presets for quick shape generation
+const SHAPE_PRESETS = {
+  LSHAPE_4X: {
+    name: '4× L-Shapes (80×80cm)',
+    bin: 'SHEET_320x160',
+    shapes: [
+      { type: 'lshape', totalWidth: 80, totalHeight: 80, armWidth: 40, armHeight: 40, quantity: 4 }
+    ]
+  },
+  LSHAPE_6X: {
+    name: '6× L-Shapes (80×80cm)',
+    bin: 'SHEET_320x160',
+    shapes: [
+      { type: 'lshape', totalWidth: 80, totalHeight: 80, armWidth: 40, armHeight: 40, quantity: 6 }
+    ]
+  },
+  LSHAPE_8X: {
+    name: '8× L-Shapes (80×80cm)',
+    bin: 'SHEET_320x160',
+    shapes: [
+      { type: 'lshape', totalWidth: 80, totalHeight: 80, armWidth: 40, armHeight: 40, quantity: 8 }
+    ]
+  },
+  RECT_MIXED: {
+    name: 'Mixed Rectangles',
+    bin: 'DEMO',
+    shapes: [
+      { type: 'rectangle', width: 120, height: 60, quantity: 3 },
+      { type: 'rectangle', width: 80, height: 50, quantity: 2 },
+      { type: 'rectangle', width: 100, height: 40, quantity: 2 }
+    ]
+  },
+  LSHAPE_SMALL: {
+    name: '3× Small L-Shapes (Demo)',
+    bin: 'DEMO',
+    shapes: [
+      { type: 'lshape', totalWidth: 15, totalHeight: 15, armWidth: 8, armHeight: 8, quantity: 3 }
+    ]
+  },
+  LSHAPE_VARIETY: {
+    name: 'L-Shapes Variety',
+    bin: 'SHEET_320x160',
+    shapes: [
+      { type: 'lshape', totalWidth: 80, totalHeight: 80, armWidth: 40, armHeight: 40, quantity: 2 },
+      { type: 'lshape', totalWidth: 60, totalHeight: 60, armWidth: 30, armHeight: 30, quantity: 2 },
+      { type: 'lshape', totalWidth: 100, totalHeight: 100, armWidth: 50, armHeight: 50, quantity: 2 }
+    ]
+  }
+}
+
 const CustomShapeBuilder = ({ onShapesGenerated }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [binPreset, setBinPreset] = useState('DEMO')
   const [customBinWidth, setCustomBinWidth] = useState(320)
   const [customBinHeight, setCustomBinHeight] = useState(160)
   const [shapes, setShapes] = useState([])
+  const [selectedPreset, setSelectedPreset] = useState('')
   
   // Current shape being defined
   const [shapeType, setShapeType] = useState('rectangle')
@@ -21,6 +72,51 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
   const [lArmWidth, setLArmWidth] = useState(50)
   const [lArmHeight, setLArmHeight] = useState(50)
   const [quantity, setQuantity] = useState(1)
+  
+  const handleLoadPreset = (presetKey) => {
+    if (!presetKey) return
+    
+    const preset = SHAPE_PRESETS[presetKey]
+    if (!preset) return
+    
+    // Set bin
+    setBinPreset(preset.bin)
+    
+    // Generate shapes from preset
+    const presetBin = PRESETS[preset.bin]
+    const builder = new ShapeBuilder(presetBin.binWidthCm, presetBin.binHeightCm)
+    
+    const newShapes = []
+    preset.shapes.forEach((shapeConfig, shapeIndex) => {
+      for (let i = 0; i < shapeConfig.quantity; i++) {
+        let shape
+        if (shapeConfig.type === 'rectangle') {
+          shape = builder.createRectangle(shapeConfig.width, shapeConfig.height)
+          shape.description = `Rectangle ${shapeConfig.width}×${shapeConfig.height}cm`
+        } else if (shapeConfig.type === 'lshape') {
+          shape = builder.createLShape(
+            shapeConfig.totalWidth, 
+            shapeConfig.totalHeight, 
+            shapeConfig.armWidth, 
+            shapeConfig.armHeight
+          )
+          shape.description = `L-Shape ${shapeConfig.totalWidth}×${shapeConfig.totalHeight}cm`
+        }
+        
+        if (shape) {
+          shape.id = `${shape.type}-${Date.now()}-${shapeIndex}-${i}`
+          shape.quantity = i + 1
+          shape.totalQuantity = shapeConfig.quantity
+          newShapes.push(shape)
+        }
+      }
+    })
+    
+    setShapes(newShapes)
+    setSelectedPreset('')
+    
+    console.log(`Loaded preset: ${preset.name} - ${newShapes.length} shapes`)
+  }
   
   const handleAddShape = () => {
     const preset = binPreset === 'CUSTOM' 
@@ -248,6 +344,48 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
                 </div>
               </div>
             )}
+          </div>
+          
+          {/* Quick Presets Section */}
+          <div className="section" style={{ 
+            background: '#f0f9ff', 
+            padding: '15px', 
+            borderRadius: '8px',
+            border: '1px solid #bae6fd'
+          }}>
+            <h4 style={{ color: '#0369a1', marginBottom: '10px' }}>Quick Test Presets</h4>
+            <div className="form-group">
+              <label style={{ color: '#0c4a6e' }}>Load preset configuration:</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select 
+                  value={selectedPreset} 
+                  onChange={(e) => setSelectedPreset(e.target.value)}
+                  style={{ flex: 1 }}
+                >
+                  <option value="">-- Select a preset --</option>
+                  {Object.entries(SHAPE_PRESETS).map(([key, preset]) => (
+                    <option key={key} value={key}>{preset.name}</option>
+                  ))}
+                </select>
+                <Button 
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleLoadPreset(selectedPreset)}
+                  disabled={!selectedPreset}
+                  style={{
+                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                    border: 'none',
+                    padding: '6px 16px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Load
+                </Button>
+              </div>
+              <small style={{ color: '#64748b', display: 'block', marginTop: '5px' }}>
+                Quickly load common test scenarios (replaces current shapes)
+              </small>
+            </div>
           </div>
           
           {/* Preview */}

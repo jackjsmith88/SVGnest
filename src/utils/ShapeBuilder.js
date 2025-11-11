@@ -88,14 +88,15 @@ export class ShapeBuilder {
     const inset = this.shapeInset
     
     // L-shape points (COUNTER-CLOCKWISE from top-left) - SVGnest requires CCW for proper NFP
-    // This is critical for interlocking - clockwise polygons can cause NFP calculation failures
+    // STROKE COMPENSATION: All polygon edges get inset by 0.5px to compensate for 1px stroke
+    // For the inner corner (concave notch), BOTH edges move inward, so we ADD inset to both x and y
     const points = [
-      { x: inset, y: inset },                      // 1. Top-left
-      { x: inset, y: h - inset },                  // 2. Bottom-left (go down)
-      { x: w - inset, y: h - inset },              // 3. Bottom-right (go right)
-      { x: w - inset, y: h - ah - inset },         // 4. Top-right of horizontal arm (go up)
-      { x: aw - inset, y: h - ah - inset },        // 5. Inner corner (go left)
-      { x: aw - inset, y: inset }                  // 6. Top-right of vertical arm (go up)
+      { x: inset, y: inset },                      // 1. Top-left (outer corner: inset both)
+      { x: inset, y: h - inset },                  // 2. Bottom-left (outer corner: inset both)
+      { x: w - inset, y: h - inset },              // 3. Bottom-right (outer corner: inset both)
+      { x: w - inset, y: h - ah + inset },         // 4. Horizontal arm top edge (inset from bottom)
+      { x: aw + inset, y: h - ah + inset },        // 5. Inner corner (concave: ADD inset to shrink cavity)
+      { x: aw + inset, y: inset }                  // 6. Vertical arm right edge (inset from left)
     ]
     
     // Calculate actual bounding box
