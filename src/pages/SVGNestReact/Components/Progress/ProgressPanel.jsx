@@ -12,27 +12,27 @@ function ProgressPanel({ iterations }) {
       zIndex: 999
     }}>
       <Card 
-        bg="dark" 
-        text="light"
         style={{
-          border: '1px solid rgba(148, 163, 184, 0.2)',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+          border: '1px solid #ddd',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          background: 'white',
           display: 'none'
         }}
         id="progress-panel"
       >
         <Card.Header style={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+          borderBottom: '1px solid #ddd',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px'
+          gap: '10px',
+          color: '#333'
         }}>
-          <ClockHistory size={20} />
+          <ClockHistory size={20} color="#2196F3" />
           <strong>Nesting Progress</strong>
         </Card.Header>
 
-        <Card.Body>
+        <Card.Body style={{ background: '#f9f9f9' }}>
           {/* Time Remaining */}
           <div 
             id="info_time" 
@@ -55,14 +55,14 @@ function ProgressPanel({ iterations }) {
               animated
               style={{
                 height: '20px',
-                background: '#1e293b',
+                background: '#e9ecef',
                 borderRadius: '10px'
               }}
             />
           </div>
           <div style={{
             fontSize: '12px',
-            color: '#94a3b8',
+            color: '#6c757d',
             textAlign: 'center',
             marginBottom: '16px'
           }}>
@@ -75,15 +75,15 @@ function ProgressPanel({ iterations }) {
               {/* Material Utilization */}
               <Col xs={6}>
                 <div style={{
-                  background: '#1e293b',
+                  background: 'white',
                   padding: '12px',
                   borderRadius: '8px',
                   textAlign: 'center',
-                  border: '1px solid #475569'
+                  border: '1px solid #ddd'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '6px' }}>
                     <Percent size={16} color="#10b981" />
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Efficiency</span>
+                    <span style={{ fontSize: '12px', color: '#6c757d' }}>Efficiency</span>
                   </div>
                   <div style={{
                     fontSize: '28px',
@@ -99,15 +99,15 @@ function ProgressPanel({ iterations }) {
               {/* Iterations */}
               <Col xs={6}>
                 <div style={{
-                  background: '#1e293b',
+                  background: 'white',
                   padding: '12px',
                   borderRadius: '8px',
                   textAlign: 'center',
-                  border: '1px solid #475569'
+                  border: '1px solid #ddd'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '6px' }}>
                     <Grid3x3Gap size={16} color="#f59e0b" />
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Iterations</span>
+                    <span style={{ fontSize: '12px', color: '#6c757d' }}>Iterations</span>
                   </div>
                   <div style={{
                     fontSize: '28px',
@@ -122,15 +122,15 @@ function ProgressPanel({ iterations }) {
               {/* Parts Placed */}
               <Col xs={12}>
                 <div style={{
-                  background: '#1e293b',
+                  background: 'white',
                   padding: '12px',
                   borderRadius: '8px',
                   textAlign: 'center',
-                  border: '1px solid #475569'
+                  border: '1px solid #ddd'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '6px' }}>
                     <Layers size={16} color="#3b82f6" />
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Parts Placed</span>
+                    <span style={{ fontSize: '12px', color: '#6c757d' }}>Parts Placed</span>
                   </div>
                   <div style={{
                     fontSize: '28px',

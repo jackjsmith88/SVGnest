@@ -127,7 +127,7 @@ function SVGNestReactParent() {
   const handleStart = () => {
     if (isWorking) {
       stopNest()
-      setNestingStarted(false)
+      // Don't set nestingStarted to false - keep it true to show results
     } else {
       const result = startNest()
       if (!result.success) {
@@ -160,8 +160,13 @@ function SVGNestReactParent() {
   const handleExit = () => {
     setShowSplash(true)
     setBinSelected(false)
+    setNestingStarted(false)
     setMessage('')
     setMessageClass('')
+    // Clear bins when exiting
+    if (binsRef.current) {
+      binsRef.current.innerHTML = ''
+    }
   }
 
   return (
@@ -181,9 +186,12 @@ function SVGNestReactParent() {
           binSelected={binSelected}
           downloadReady={downloadReady}
           configVisible={configVisible}
+          showCustomBuilder={showCustomBuilder}
+          nestingStarted={nestingStarted}
           onStart={handleStart}
           onDownload={handleDownloadClick}
           onConfigToggle={toggleConfig}
+          onToggleCustomBuilder={toggleCustomBuilder}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onExit={handleExit}
@@ -195,30 +203,12 @@ function SVGNestReactParent() {
           onClose={toggleConfig}
         />
 
-        {!showCustomBuilder && (
+        {!showCustomBuilder && !nestingStarted && (
           <ShapeManager
             onFileLoad={loadCustomFile}
             onDemoLoad={loadDemo}
           />
         )}
-        
-        <button 
-          onClick={toggleCustomBuilder}
-          style={{
-            margin: '10px 20px',
-            padding: '10px 20px',
-            backgroundColor: showCustomBuilder ? '#f44336' : '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: nestingStarted ? 'none' : 'block'
-          }}
-        >
-          {showCustomBuilder ? 'Hide Custom Shape Builder' : 'Show Custom Shape Builder'}
-        </button>
         
         {showCustomBuilder && !nestingStarted && (
           <CustomShapeBuilder 

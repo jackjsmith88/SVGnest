@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Card, Form, Button, Row, Col, Badge } from 'react-bootstrap'
-import { FileEarmarkArrowUp, Collection, DashCircle, PlusCircle } from 'react-bootstrap-icons'
+import { Card, Form, Button, Row, Col, Badge, Collapse } from 'react-bootstrap'
+import { FileEarmarkArrowUp, Collection, DashCircle, PlusCircle, ChevronDown, ChevronUp } from 'react-bootstrap-icons'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
 function ShapeManager({ onFileLoad, onDemoLoad }) {
   const [multiplier, setMultiplier] = useState(1)
   const [fileInputKey, setFileInputKey] = useState(Date.now())
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const handleMultiplierChange = (value) => {
     const newValue = Math.max(1, Math.min(10, value))
@@ -34,37 +35,52 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
 
   return (
     <Card 
-      bg="dark" 
-      text="light"
       style={{
         margin: '20px',
-        border: '1px solid rgba(148, 163, 184, 0.2)',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)'
+        border: '1px solid #ddd',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        background: 'white'
       }}
     >
       <Card.Header style={{
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-        borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        borderBottom: '1px solid #ddd',
         display: 'flex',
         alignItems: 'center',
-        gap: '10px'
-      }}>
-        <Collection size={20} />
+        gap: '10px',
+        cursor: 'pointer',
+        color: '#333'
+      }}
+      onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <Collection size={20} color="#2196F3" />
         <strong>Shape Manager</strong>
         <Badge bg="primary" style={{ marginLeft: 'auto' }}>
           {totalShapes} shapes
         </Badge>
+        <Button 
+          variant="link" 
+          size="sm"
+          style={{ 
+            color: '#555',
+            padding: '0',
+            marginLeft: '8px'
+          }}
+        >
+          {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+        </Button>
       </Card.Header>
 
-      <Card.Body>
-        <Row className="g-3">
-          {/* Multiplier Control */}
-          <Col md={12}>
-            <Form.Group>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <Form.Label style={{ margin: 0, fontWeight: '600' }}>
-                  Shape Copies
-                </Form.Label>
+      <Collapse in={!isCollapsed}>
+        <Card.Body style={{ background: '#f9f9f9' }}>
+          <Row className="g-3">
+            {/* Multiplier Control */}
+            <Col md={12}>
+              <Form.Group>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <Form.Label style={{ margin: 0, fontWeight: '600', color: '#555' }}>
+                    Shape Copies
+                  </Form.Label>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <Button
                     variant="outline-danger"
@@ -123,7 +139,7 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
           {/* File Upload */}
           <Col md={6}>
             <Form.Group>
-              <Form.Label style={{ fontWeight: '600', fontSize: '14px' }}>
+              <Form.Label style={{ fontWeight: '600', fontSize: '14px', color: '#555' }}>
                 Load Custom SVG
               </Form.Label>
               <div style={{ position: 'relative' }}>
@@ -133,9 +149,9 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
                   accept=".svg"
                   onChange={handleFileChange}
                   style={{
-                    background: '#1e293b',
-                    border: '2px dashed #475569',
-                    color: '#e5e7eb',
+                    background: 'white',
+                    border: '2px dashed #ccc',
+                    color: '#333',
                     cursor: 'pointer',
                     padding: '10px'
                   }}
@@ -154,7 +170,6 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
               onClick={handleDemoClick}
               style={{
                 width: '100%',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                 border: 'none',
                 fontWeight: '600',
                 display: 'flex',
@@ -169,7 +184,8 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
             </Button>
           </Col>
         </Row>
-      </Card.Body>
+        </Card.Body>
+      </Collapse>
     </Card>
   )
 }

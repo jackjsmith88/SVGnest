@@ -2,6 +2,66 @@ import { useEffect, useRef } from 'react'
 import { Form, Button, Card, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+// Unified styles for light theme
+const styles = {
+  backdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: '20px'
+  },
+  card: {
+    maxWidth: '600px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+    border: '1px solid #ddd'
+  },
+  header: {
+    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+    borderBottom: '1px solid #dee2e6',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    color: '#6c757d',
+    fontSize: '24px',
+    cursor: 'pointer',
+    padding: '0',
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '4px',
+    transition: 'all 0.2s'
+  },
+  input: {
+    background: 'white',
+    border: '1px solid #ced4da',
+    color: '#333'
+  },
+  footer: {
+    background: '#f8f9fa',
+    borderTop: '1px solid #dee2e6',
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'flex-end'
+  }
+}
+
 function Configuration({ visible, onSave, onClose }) {
   const configRef = useRef(null)
 
@@ -47,67 +107,22 @@ function Configuration({ visible, onSave, onClose }) {
   return (
     <div 
       onClick={handleBackdropClick}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '20px'
-      }}
+      style={styles.backdrop}
     >
-      <Card 
-        ref={configRef}
-        style={{
-          maxWidth: '600px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-          border: '1px solid rgba(148, 163, 184, 0.2)'
-        }}
-        bg="dark"
-        text="light"
-      >
-        <Card.Header style={{ 
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <h4 className="mb-0">SVGnest Configuration</h4>
+      <Card style={styles.card}>
+        <Card.Header style={styles.header}>
+          <h4 className="mb-0" style={{ color: '#333' }}>SVGnest Configuration</h4>
           {onClose && (
             <button
               onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#94a3b8',
-                fontSize: '24px',
-                cursor: 'pointer',
-                padding: '0',
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '4px',
-                transition: 'all 0.2s'
-              }}
+              style={styles.closeButton}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(148, 163, 184, 0.1)'
-                e.currentTarget.style.color = '#f8fafc'
+                e.currentTarget.style.background = 'rgba(108, 117, 125, 0.1)'
+                e.currentTarget.style.color = '#212529'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'none'
-                e.currentTarget.style.color = '#94a3b8'
+                e.currentTarget.style.color = '#6c757d'
               }}
               aria-label="Close"
             >
@@ -116,7 +131,7 @@ function Configuration({ visible, onSave, onClose }) {
           )}
         </Card.Header>
         
-        <Card.Body>
+        <Card.Body style={{ background: '#f9f9f9' }}>
           <Form>
             {/* Spacing */}
             <Form.Group className="mb-3">
@@ -135,7 +150,7 @@ function Configuration({ visible, onSave, onClose }) {
                 type="text" 
                 defaultValue="0" 
                 data-config="spacing"
-                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+                style={styles.input}
               />
             </Form.Group>
 
@@ -156,7 +171,7 @@ function Configuration({ visible, onSave, onClose }) {
                 type="text" 
                 defaultValue="0.3" 
                 data-config="curveTolerance"
-                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+                style={styles.input}
               />
             </Form.Group>
 
@@ -177,7 +192,7 @@ function Configuration({ visible, onSave, onClose }) {
                 type="text" 
                 defaultValue="100000000" 
                 data-config="clipperScale"
-                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+                style={styles.input}
               />
             </Form.Group>
 
@@ -198,7 +213,7 @@ function Configuration({ visible, onSave, onClose }) {
                 type="text" 
                 defaultValue="4" 
                 data-config="rotations"
-                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+                style={styles.input}
               />
             </Form.Group>
 
@@ -219,7 +234,7 @@ function Configuration({ visible, onSave, onClose }) {
                 type="text" 
                 defaultValue="10" 
                 data-config="populationSize"
-                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+                style={styles.input}
               />
             </Form.Group>
 
@@ -240,7 +255,7 @@ function Configuration({ visible, onSave, onClose }) {
                 type="text" 
                 defaultValue="10" 
                 data-config="mutationRate"
-                style={{ background: '#1e293b', border: '1px solid #475569', color: '#e5e7eb' }}
+                style={styles.input}
               />
             </Form.Group>
 
@@ -290,22 +305,11 @@ function Configuration({ visible, onSave, onClose }) {
           </Form>
         </Card.Body>
 
-        <Card.Footer style={{ 
-          background: '#0f172a',
-          borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-          display: 'flex',
-          gap: '10px',
-          justifyContent: 'flex-end'
-        }}>
+        <Card.Footer style={styles.footer}>
           {onClose && (
             <Button 
               variant="outline-secondary" 
               onClick={onClose}
-              style={{
-                borderColor: '#475569',
-                color: '#94a3b8',
-                fontWeight: '600'
-              }}
             >
               Cancel
             </Button>

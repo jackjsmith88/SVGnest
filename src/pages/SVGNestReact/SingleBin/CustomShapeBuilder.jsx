@@ -1,8 +1,12 @@
 import { useState } from 'react'
+import { Card, Collapse, Button, Badge } from 'react-bootstrap'
+import { ChevronDown, ChevronUp, PencilSquare } from 'react-bootstrap-icons'
 import ShapeBuilder, { PRESETS } from '../../../utils/ShapeBuilder'
 import './CustomShapeBuilder.css'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 const CustomShapeBuilder = ({ onShapesGenerated }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const [binPreset, setBinPreset] = useState('DEMO')
   const [customBinWidth, setCustomBinWidth] = useState(320)
   const [customBinHeight, setCustomBinHeight] = useState(160)
@@ -115,7 +119,47 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
   }
   
   return (
-    <div className="custom-shape-builder">
+    <Card 
+      bg="dark" 
+      text="light"
+      style={{
+        margin: '20px',
+        border: '1px solid rgba(148, 163, 184, 0.2)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)'
+      }}
+    >
+      <Card.Header style={{
+        background: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
+        borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        cursor: 'pointer'
+      }}
+      onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <PencilSquare size={20} />
+        <strong>Custom Shape Builder</strong>
+        <Badge bg="warning" text="dark" style={{ marginLeft: 'auto' }}>
+          {shapes.length} shapes
+        </Badge>
+        <Button 
+          variant="link" 
+          size="sm"
+          style={{ 
+            color: '#94a3b8',
+            padding: '0',
+            marginLeft: '8px'
+          }}
+        >
+          {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+        </Button>
+      </Card.Header>
+
+      <Collapse in={!isCollapsed}>
+        <div>
+          <Card.Body>
+            <div className="custom-shape-builder">
       <h3>Custom Shape Builder</h3>
       
       <div className="main-content">
@@ -294,7 +338,11 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
           </div>
         </div>
       </div>
-    </div>
+            </div>
+          </Card.Body>
+        </div>
+      </Collapse>
+    </Card>
   )
 }
 
