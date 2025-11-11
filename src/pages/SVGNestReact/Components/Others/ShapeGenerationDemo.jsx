@@ -1,7 +1,7 @@
 // Demo: Understanding Shape Generation
 // This shows what createSimpleShapes actually produces
 
-import { createSimpleShapes } from '../utils/multiBinNesting'
+import { createSimpleShapes } from '../../../../utils/multiBinNesting'
 
 function ShapeGenerationDemo() {
   // Generate 5 test shapes for a 400x300 bin

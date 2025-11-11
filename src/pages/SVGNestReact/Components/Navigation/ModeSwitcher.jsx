@@ -1,4 +1,4 @@
-import { MODES } from '../../utils/constants'
+import { MODES } from '../../../../utils/constants'
 
 function ModeSwitcher({ currentMode, onModeChange }) {
   return (

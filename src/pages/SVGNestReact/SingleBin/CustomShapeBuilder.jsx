@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ShapeBuilder, { PRESETS } from '../../utils/ShapeBuilder'
+import ShapeBuilder, { PRESETS } from '../../../utils/ShapeBuilder'
 import './CustomShapeBuilder.css'
 
 const CustomShapeBuilder = ({ onShapesGenerated }) => {
