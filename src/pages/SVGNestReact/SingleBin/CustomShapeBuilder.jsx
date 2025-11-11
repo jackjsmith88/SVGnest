@@ -68,31 +68,84 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
     const builder = new ShapeBuilder(preset.binWidthCm, preset.binHeightCm)
     const svgString = builder.shapesToSVG(shapes)
     
-    // Log dimension verification
-    console.log('=== DIMENSION VERIFICATION ===')
-    console.log(`Bin: ${preset.binWidthCm}×${preset.binHeightCm}cm = ${builder.binWidthPx}×${builder.binHeightPx}px`)
-    console.log(`Scale factor: ${builder.pxPerCm.toFixed(3)} px/cm (96 DPI)`)
-    console.log('Shapes:')
-    shapes.forEach((shape, i) => {
-      if (shape.widthCm && shape.heightCm) {
-        console.log(`  [${i}] ${shape.description}: ${shape.widthCm}×${shape.heightCm}cm = ${shape.widthPx.toFixed(2)}×${shape.heightPx.toFixed(2)}px`)
+    // Helper to calculate polygon area using shoelace formula
+    const calculatePolygonArea = (points) => {
+      let area = 0
+      for (let i = 0; i < points.length; i++) {
+        const j = (i + 1) % points.length
+        area += points[i].x * points[j].y
+        area -= points[j].x * points[i].y
       }
-    })
+      return Math.abs(area / 2)
+    }
     
-    // Calculate theoretical fit
-    if (shapes.length > 0 && shapes[0].widthCm && shapes[0].heightCm) {
-      const shapeWidth = shapes[0].widthPx
-      const shapeHeight = shapes[0].heightPx
-      const across = Math.floor(builder.binWidthPx / shapeWidth)
-      const down = Math.floor(builder.binHeightPx / shapeHeight)
-      const theoretical = across * down
-      console.log(`\nTheoretical fit (no spacing): ${across} across × ${down} down = ${theoretical} shapes`)
-      console.log(`You have: ${shapes.length} shapes`)
-      if (shapes.length > theoretical) {
-        console.warn(`⚠️ ${shapes.length - theoretical} shapes may not fit! Consider smaller shapes or larger bin.`)
+    console.log('\n========================================')
+    console.log('🎨 CUSTOM SHAPE BUILDER - GENERATING SVG')
+    console.log('========================================')
+    
+    // Log bin configuration
+    console.log('\n📦 BIN CONFIGURATION:')
+    console.log(`  Preset: ${PRESETS[binPreset]?.name || 'Custom'}`)
+    console.log(`  Dimensions: ${preset.binWidthCm}×${preset.binHeightCm}cm = ${builder.binWidthPx}×${builder.binHeightPx}px`)
+    console.log(`  Scale factor: ${builder.pxPerCm.toFixed(3)} px/cm (96 DPI)`)
+    console.log(`  Bin area: ${(builder.binWidthPx * builder.binHeightPx).toFixed(2)} px²`)
+    
+    // Log shapes details
+    console.log('\n🔷 SHAPES CREATED:')
+    console.log(`  Total shapes: ${shapes.length}`)
+    
+    if (shapes.length > 0) {
+      let totalArea = 0
+      
+      shapes.forEach((shape, i) => {
+        // Calculate actual area using shoelace formula instead of bounding box
+        const actualArea = calculatePolygonArea(shape.points)
+        totalArea += actualArea
+        
+        if (i < 5) { // Show first 5
+          console.log(`  [${i}] ${shape.description}:`)
+          console.log(`    Type: ${shape.type}`)
+          console.log(`    Points: ${shape.points.length}`)
+          console.log(`    Bounding box: ${shape.widthPx?.toFixed(2) || 'N/A'}×${shape.heightPx?.toFixed(2) || 'N/A'}px`)
+          console.log(`    Actual area: ${actualArea.toFixed(2)} px² (using shoelace formula)`)
+          if (shape.type === 'lshape') {
+            const boundingBoxArea = (shape.widthPx || 0) * (shape.heightPx || 0)
+            const efficiency = ((actualArea / boundingBoxArea) * 100).toFixed(1)
+            console.log(`    L-Shape specs: Total ${shape.totalWidthCm}×${shape.totalHeightCm}cm, Arm ${shape.armWidthCm}×${shape.armHeightCm}cm`)
+            console.log(`    Shape efficiency: ${efficiency}% of bounding box (actual vs bbox area)`)
+            console.log(`    First 3 points:`, shape.points.slice(0, 3).map(p => `(${p.x.toFixed(1)},${p.y.toFixed(1)})`).join(', '))
+          }
+        }
+      })
+      
+      if (shapes.length > 5) {
+        console.log(`  ... and ${shapes.length - 5} more shapes`)
+      }
+      
+      console.log(`\n  Total shapes area: ${totalArea.toFixed(2)} px² (actual polygon area)`)
+      console.log(`  Bin area: ${(builder.binWidthPx * builder.binHeightPx).toFixed(2)} px²`)
+      const utilizationPercent = (totalArea / (builder.binWidthPx * builder.binHeightPx) * 100).toFixed(1)
+      console.log(`  Theoretical max utilization: ${utilizationPercent}% (if perfectly packed)`)
+      
+      if (totalArea > builder.binWidthPx * builder.binHeightPx) {
+        console.warn(`  ⚠️ WARNING: Total shape area exceeds bin area! Shapes won't all fit.`)
       }
     }
-    console.log('=============================')
+    
+    // Check for potential issues
+    const hasInvalidDimensions = shapes.some(s => !s.widthPx || !s.heightPx || s.widthPx <= 0 || s.heightPx <= 0)
+    if (hasInvalidDimensions) {
+      console.error('  ❌ ERROR: Some shapes have invalid dimensions! This will cause nesting problems.')
+    }
+    
+    const hasNaN = shapes.some(s => s.points.some(p => isNaN(p.x) || isNaN(p.y)))
+    if (hasNaN) {
+      console.error('  ❌ ERROR: Some shapes have NaN coordinates! Check shape generation.')
+    }
+    
+    console.log('\n📄 SVG PREVIEW (first 500 chars):')
+    console.log(svgString.substring(0, 500) + '...')
+    console.log('========================================\n')
     
     if (onShapesGenerated) {
       onShapesGenerated(svgString, shapes.length)

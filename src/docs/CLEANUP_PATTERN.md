@@ -17,40 +17,38 @@ Each hook manages its own cleanup using React's `useEffect` cleanup function:
 useEffect(() => {
   return () => {
     console.log('Hook: Cleaning up on unmount')
-    if (window.SvgNest && isWorking) {
+    if (window.SvgNest) {
       window.SvgNest.stop()
     }
   }
-}, [isWorking])
+}, []) // Empty dependency array - only run on unmount
 ```
 
 **What this does:**
-- Automatically called when component unmounts or dependencies change
+- Automatically called when component unmounts
 - Calls `window.SvgNest.stop()` which terminates web workers
 - Clears any interval timers
+- **Critical**: Empty dependency array ensures cleanup only runs on unmount, not on state changes
 
 ### 2. **Component-Level Cleanup** (`SVGNestReactParent.jsx`, `MultiBinTester.jsx`)
 
 Components add an additional layer of cleanup:
 
 ```javascript
-const isMountedRef = useRef(true)
-
 useEffect(() => {
   return () => {
     console.log('Component: Cleaning up on unmount')
-    isMountedRef.current = false
-    if (isWorking) {
-      stopNest()
+    if (window.SvgNest) {
+      window.SvgNest.stop()
     }
   }
-}, [isWorking, stopNest])
+}, []) // Empty dependency array - only run on unmount
 ```
 
 **What this does:**
-- Sets a mounted flag to prevent state updates after unmount
-- Calls the stop function from the hook
-- Prevents "Can't perform a React state update on an unmounted component" warnings
+- Only runs cleanup when component actually unmounts
+- Calls `window.SvgNest.stop()` to terminate workers
+- **Critical**: Empty dependency array prevents cleanup from running on every state change
 
 ### 3. **Utility-Level Cleanup** (`multiBinSVGNest.js`)
 

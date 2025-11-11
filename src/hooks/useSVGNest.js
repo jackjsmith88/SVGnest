@@ -11,16 +11,35 @@ export const useSVGNest = () => {
 
   const displayRef = useRef(null)
   const binsRef = useRef(null)
+  
+  // Track nesting session metadata
+  const sessionMetadataRef = useRef({
+    startTime: null,
+    endTime: null,
+    totalShapes: 0,
+    config: null
+  })
 
   // Cleanup on unmount or when component is no longer needed
   useEffect(() => {
     return () => {
       console.log('useSVGNest: Cleaning up on unmount')
-      if (window.SvgNest && isWorking) {
+      if (window.SvgNest) {
         window.SvgNest.stop()
       }
     }
-  }, [isWorking])
+  }, [])
+
+  // Helper function to calculate polygon area using shoelace formula
+  const calculatePolygonArea = (points) => {
+    let area = 0
+    for (let i = 0; i < points.length; i++) {
+      const j = (i + 1) % points.length
+      area += points[i].x * points[j].y
+      area -= points[j].x * points[i].y
+    }
+    return area / 2
+  }
 
   // Define progress and renderSvg functions first
   const progress = useCallback((percent) => {
@@ -195,13 +214,123 @@ export const useSVGNest = () => {
       }
     })
     
+    console.log('\n========================================')
+    console.log('🚀 STARTING NESTING ALGORITHM')
+    console.log('========================================')
+    
+    // Apply config from UI if any
     if (Object.keys(config).length > 0) {
-      console.log('Applying config before nest:', config)
+      console.log('\n📋 APPLYING UI CONFIGURATION:')
+      Object.entries(config).forEach(([key, value]) => {
+        console.log(`  ${key}: ${value}`)
+      })
       window.SvgNest.config(config)
     }
     
-    // Reset best solution tracker
+    // Always log the actual configuration being used by SVGnest
+    console.log('\n📋 ACTUAL CONFIGURATION USED BY SVGNEST:')
+    const actualConfig = window.SvgNest.config()
+    
+    // Organize config into categories
+    const geometrySettings = ['spacing', 'curveTolerance', 'clipperScale']
+    const algorithmSettings = ['rotations', 'populationSize', 'mutationRate', 'exploreConcave', 'useHoles']
+    
+    console.log('\n  Geometry Settings:')
+    geometrySettings.forEach(key => {
+      if (actualConfig[key] !== undefined) {
+        console.log(`    ${key}: ${actualConfig[key]}`)
+      }
+    })
+    
+    console.log('\n  Algorithm Settings:')
+    algorithmSettings.forEach(key => {
+      if (actualConfig[key] !== undefined) {
+        const value = typeof actualConfig[key] === 'boolean' ? (actualConfig[key] ? 'enabled' : 'disabled') : actualConfig[key]
+        console.log(`    ${key}: ${value}`)
+      }
+    })
+    
+    // Show any other config values
+    const knownKeys = [...geometrySettings, ...algorithmSettings]
+    const otherKeys = Object.keys(actualConfig).filter(k => !knownKeys.includes(k))
+    if (otherKeys.length > 0) {
+      console.log('\n  Other Settings:')
+      otherKeys.forEach(key => {
+        console.log(`    ${key}: ${actualConfig[key]}`)
+      })
+    }
+    
+    // Log bin information
+    const binElement = document.querySelector('#select svg polygon.active') || document.querySelector('#select svg polygon#bin')
+    if (binElement) {
+      const binPoints = binElement.getAttribute('points')
+      const pointArray = binPoints.split(' ').map(p => {
+        const [x, y] = p.split(',').map(parseFloat)
+        return { x, y }
+      })
+      const binWidth = Math.max(...pointArray.map(p => p.x)) - Math.min(...pointArray.map(p => p.x))
+      const binHeight = Math.max(...pointArray.map(p => p.y)) - Math.min(...pointArray.map(p => p.y))
+      
+      console.log('\n📦 BIN INFORMATION:')
+      console.log(`  Dimensions: ${binWidth.toFixed(2)} × ${binHeight.toFixed(2)} px`)
+      console.log(`  Area: ${(binWidth * binHeight).toFixed(2)} px²`)
+      console.log(`  Points: ${pointArray.length}`)
+    }
+    
+    // Log shapes information
+    const shapeElements = document.querySelectorAll('#select svg polygon:not(#bin):not(.active)')
+    console.log('\n🔷 SHAPES INFORMATION:')
+    console.log(`  Total shapes: ${shapeElements.length}`)
+    
+    if (shapeElements.length > 0) {
+      const shapesData = []
+      shapeElements.forEach((shape, i) => {
+        const points = shape.getAttribute('points')
+        const pointArray = points.split(' ').map(p => {
+          const [x, y] = p.split(',').map(parseFloat)
+          return { x, y }
+        })
+        const width = Math.max(...pointArray.map(p => p.x)) - Math.min(...pointArray.map(p => p.x))
+        const height = Math.max(...pointArray.map(p => p.y)) - Math.min(...pointArray.map(p => p.y))
+        const area = calculatePolygonArea(pointArray)
+        
+        shapesData.push({
+          index: i,
+          id: shape.getAttribute('id') || `shape-${i}`,
+          points: pointArray.length,
+          width: width.toFixed(2),
+          height: height.toFixed(2),
+          area: Math.abs(area).toFixed(2)
+        })
+      })
+      
+      // Calculate total area
+      const totalShapeArea = shapesData.reduce((sum, s) => sum + parseFloat(s.area), 0)
+      console.log(`  Total shape area: ${totalShapeArea.toFixed(2)} px²`)
+      
+      // Show first 5 shapes for inspection
+      console.log('\n  First 5 shapes (for inspection):')
+      shapesData.slice(0, 5).forEach(shape => {
+        console.log(`    [${shape.index}] ${shape.id}: ${shape.width}×${shape.height}px, ${shape.points} points, area: ${shape.area}px²`)
+      })
+      
+      if (shapeElements.length > 5) {
+        console.log(`  ... and ${shapeElements.length - 5} more shapes`)
+      }
+    }
+    
+    console.log('\n========================================\n')
+    
+    // Reset best solution tracker and session metadata
     bestSolutionRef.current = { bins: null, fitness: Infinity }
+    
+    // Initialize session metadata
+    sessionMetadataRef.current = {
+      startTime: new Date(),
+      endTime: null,
+      totalShapes: shapeElements.length,
+      config: actualConfig
+    }
     
     window.SvgNest.start(progress, renderSvg)
     setIsWorking(true)
@@ -221,8 +350,107 @@ export const useSVGNest = () => {
       window.SvgNest.stop()
     }
     
+    // Generate debug summary
+    sessionMetadataRef.current.endTime = new Date()
+    const elapsedMs = sessionMetadataRef.current.endTime - sessionMetadataRef.current.startTime
+    const elapsedSec = (elapsedMs / 1000).toFixed(2)
+    
+    // Extract best solution data
+    const bestSolution = bestSolutionRef.current
+    const binsElement = binsRef.current
+    
+    // Count placed shapes from bins
+    let totalPlaced = 0
+    let binCount = 0
+    if (binsElement && binsElement.children.length > 0) {
+      binCount = binsElement.children.length
+      for (let i = 0; i < binsElement.children.length; i++) {
+        const bin = binsElement.children[i]
+        const shapes = bin.querySelectorAll('polygon:not(#bin)')
+        totalPlaced += shapes.length
+      }
+    }
+    
+    // Calculate efficiency from bins
+    let efficiency = 0
+    if (binsElement && binsElement.children.length > 0) {
+      const efficiencyDisplay = document.getElementById('info_efficiency_display')
+      if (efficiencyDisplay && efficiencyDisplay.innerHTML) {
+        efficiency = parseInt(efficiencyDisplay.innerHTML) || 0
+      }
+    }
+    
+    // Create comprehensive debug summary
+    const debugSummary = {
+      // Session timing
+      timing: {
+        started: sessionMetadataRef.current.startTime?.toLocaleTimeString(),
+        stopped: sessionMetadataRef.current.endTime?.toLocaleTimeString(),
+        elapsedSeconds: parseFloat(elapsedSec),
+        elapsedFormatted: `${elapsedSec}s`
+      },
+      
+      // Shapes info
+      shapes: {
+        total: sessionMetadataRef.current.totalShapes,
+        placed: totalPlaced,
+        unplaced: sessionMetadataRef.current.totalShapes - totalPlaced,
+        placementRate: sessionMetadataRef.current.totalShapes > 0 
+          ? `${((totalPlaced / sessionMetadataRef.current.totalShapes) * 100).toFixed(1)}%`
+          : 'N/A'
+      },
+      
+      // Performance metrics
+      performance: {
+        iterations: iterations,
+        iterationsPerSecond: elapsedSec > 0 ? (iterations / parseFloat(elapsedSec)).toFixed(1) : 'N/A',
+        efficiency: `${efficiency}%`,
+        fitness: bestSolution.fitness !== Infinity ? bestSolution.fitness.toFixed(3) : 'N/A'
+      },
+      
+      // Results
+      results: {
+        binsUsed: binCount,
+        bestSolutionFitness: bestSolution.fitness !== Infinity ? bestSolution.fitness : null,
+        downloadReady: downloadReady
+      },
+      
+      // Configuration snapshot
+      configuration: sessionMetadataRef.current.config,
+      
+      // Best solution object (inspectable)
+      bestSolution: {
+        fitness: bestSolution.fitness,
+        binsHTML: bestSolution.bins ? 'Available in DOM' : 'Not captured',
+        rawObject: bestSolution
+      }
+    }
+    
+    // Log the summary
+    console.log('\n========================================')
+    console.log('🏁 NESTING SESSION SUMMARY')
+    console.log('========================================')
+    console.log('\n⏱️  TIMING:')
+    console.log(`   Started: ${debugSummary.timing.started}`)
+    console.log(`   Stopped: ${debugSummary.timing.stopped}`)
+    console.log(`   Elapsed: ${debugSummary.timing.elapsedFormatted}`)
+    
+    console.log('\n📊 RESULTS:')
+    console.log(`   Shapes placed: ${debugSummary.shapes.placed}/${debugSummary.shapes.total} (${debugSummary.shapes.placementRate})`)
+    console.log(`   Bins used: ${debugSummary.results.binsUsed}`)
+    console.log(`   Efficiency: ${debugSummary.performance.efficiency}`)
+    console.log(`   Fitness: ${debugSummary.performance.fitness}`)
+    
+    console.log('\n⚡ PERFORMANCE:')
+    console.log(`   Iterations: ${debugSummary.performance.iterations}`)
+    console.log(`   Rate: ${debugSummary.performance.iterationsPerSecond} iterations/sec`)
+    
+    console.log('\n📦 Full Debug Object (inspectable):')
+    console.log(debugSummary)
+    console.log('========================================\n')
+    
     setIsWorking(false)
-  }, [])
+  }, [iterations, downloadReady])
 
   const handleDownload = useCallback(() => {
     const bins = binsRef.current

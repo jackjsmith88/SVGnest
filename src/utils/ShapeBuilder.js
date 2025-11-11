@@ -88,22 +88,42 @@ export class ShapeBuilder {
     const inset = this.shapeInset
     
     // L-shape points (clockwise from top-left), inset for stroke
-    return {
+    const points = [
+      { x: inset, y: inset },                      // Top-left
+      { x: aw - inset, y: inset },                 // Top-right of vertical arm
+      { x: aw - inset, y: h - ah - inset },        // Inner corner
+      { x: w - inset, y: h - ah - inset },         // Top-right of horizontal arm
+      { x: w - inset, y: h - inset },              // Bottom-right
+      { x: inset, y: h - inset }                   // Bottom-left
+    ]
+    
+    // Calculate actual bounding box
+    const minX = Math.min(...points.map(p => p.x))
+    const maxX = Math.max(...points.map(p => p.x))
+    const minY = Math.min(...points.map(p => p.y))
+    const maxY = Math.max(...points.map(p => p.y))
+    
+    const shape = {
       id: id || `lshape-${Date.now()}`,
       type: 'lshape',
       totalWidthCm,
       totalHeightCm,
       armWidthCm,
       armHeightCm,
-      points: [
-        { x: inset, y: inset },
-        { x: aw - inset, y: inset },
-        { x: aw - inset, y: h - ah - inset },
-        { x: w - inset, y: h - ah - inset },
-        { x: w - inset, y: h - inset },
-        { x: inset, y: h - inset }
-      ]
+      widthPx: maxX - minX,   // Add computed width for layout
+      heightPx: maxY - minY,  // Add computed height for layout
+      points
     }
+    
+    console.log('L-Shape created:', {
+      dimensions: `${totalWidthCm}×${totalHeightCm}cm (arm: ${armWidthCm}×${armHeightCm}cm)`,
+      pixels: `${w.toFixed(2)}×${h.toFixed(2)}px (arm: ${aw.toFixed(2)}×${ah.toFixed(2)}px)`,
+      boundingBox: `${shape.widthPx.toFixed(2)}×${shape.heightPx.toFixed(2)}px`,
+      points: points.length,
+      inset: inset
+    })
+    
+    return shape
   }
   
   /**
@@ -197,9 +217,15 @@ export class ShapeBuilder {
       .map(p => `${(p.x + offsetX).toFixed(2)},${(p.y + offsetY).toFixed(2)}`)
       .join(' ')
     
-    // Calculate center for text label (using original dimensions, not inset)
-    const centerX = offsetX + (shape.widthPx / 2)
-    const centerY = offsetY + (shape.heightPx / 2)
+    // Calculate bounding box from actual points
+    const minX = Math.min(...shape.points.map(p => p.x))
+    const maxX = Math.max(...shape.points.map(p => p.x))
+    const minY = Math.min(...shape.points.map(p => p.y))
+    const maxY = Math.max(...shape.points.map(p => p.y))
+    
+    // Calculate center from bounding box
+    const centerX = offsetX + (minX + maxX) / 2
+    const centerY = offsetY + (minY + maxY) / 2
     
     return `<polygon id="${shape.id}" points="${pointsStr}" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="${this.shapeStrokeWidth}"/>
     <text x="${centerX.toFixed(2)}" y="${centerY.toFixed(2)}" font-size="24" font-weight="bold" fill="#1976D2" text-anchor="middle" dominant-baseline="middle">${index + 1}</text>`

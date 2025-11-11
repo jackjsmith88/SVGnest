@@ -15,7 +15,6 @@ import { useScriptLoader } from '../../hooks/useScriptLoader'
 import { useFileHandler } from '../../hooks/useFileHandler'
 import { useSVGNest } from '../../hooks/useSVGNest'
 import { useSVGLoader } from '../../hooks/useSVGLoader'
-import { useConfiguration } from '../../hooks/useConfiguration'
 import { useUIState } from '../../hooks/useUIState'
 
 // Utils
@@ -59,13 +58,6 @@ function SVGNestReactParent() {
     resetProgress
   } = useSVGNest()
 
-  // Configuration hook
-  const { saveConfig } = useConfiguration({
-    setMessage,
-    setMessageClass,
-    MESSAGE_TYPES
-  })
-
   // SVG loader hook
   const { loadDemo, loadCustomFile, loadCustomShapes } = useSVGLoader({
     displayRef,
@@ -88,11 +80,11 @@ function SVGNestReactParent() {
   useEffect(() => {
     return () => {
       console.log('SVGNestReactParent: Cleaning up on unmount')
-      if (isWorking) {
-        stopNest()
+      if (window.SvgNest) {
+        window.SvgNest.stop()
       }
     }
-  }, [isWorking, stopNest])
+  }, [])
 
   // Set initial message based on script loading
   React.useEffect(() => {
@@ -254,7 +246,6 @@ function SVGNestReactParent() {
 
         <Configuration 
           visible={configVisible} 
-          onSave={saveConfig}
           onClose={toggleConfig}
         />
 

@@ -1,6 +1,18 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Form, Button, Card, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
+
+// Default configuration values
+const DEFAULT_CONFIG = {
+  spacing: 0,
+  curveTolerance: 0.3,
+  clipperScale: 10000000,
+  rotations: 4,
+  populationSize: 10,
+  mutationRate: 10,
+  useHoles: false,
+  exploreConcave: false
+}
 
 // Unified styles for light theme
 const styles = {
@@ -62,36 +74,54 @@ const styles = {
   }
 }
 
-function Configuration({ visible, onSave, onClose }) {
-  const configRef = useRef(null)
+function Configuration({ visible, onClose }) {
+  const [config, setConfig] = useState(DEFAULT_CONFIG)
 
-  // Load saved config from localStorage when visible
+  // Load saved config from localStorage when component becomes visible
   useEffect(() => {
-    if (!visible || !configRef.current) return
+    if (!visible) return
 
     const savedConfig = localStorage.getItem('svgnest-config')
     if (savedConfig) {
       try {
-        const config = JSON.parse(savedConfig)
-        const inputs = configRef.current.querySelectorAll('input')
-        
-        inputs.forEach(input => {
-          const key = input.getAttribute('data-config')
-          if (key && config[key] !== undefined) {
-            if (input.type === 'checkbox') {
-              input.checked = config[key]
-            } else {
-              input.value = config[key]
-            }
-          }
-        })
-        
-        console.log('Loaded config from localStorage:', config)
+        const parsed = JSON.parse(savedConfig)
+        setConfig({ ...DEFAULT_CONFIG, ...parsed })
+        console.log('Loaded config from localStorage:', parsed)
       } catch (e) {
         console.error('Failed to load config:', e)
+        setConfig(DEFAULT_CONFIG)
       }
+    } else {
+      setConfig(DEFAULT_CONFIG)
     }
   }, [visible])
+
+  // Handle input changes
+  const handleChange = (field, value) => {
+    setConfig(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  // Handle form submission
+  const handleSave = () => {
+    console.log('=== SAVING CONFIG ===')
+    console.log('Config to save:', config)
+
+    // Apply to SVGnest
+    if (window.SvgNest) {
+      window.SvgNest.config(config)
+      console.log('Applied to SvgNest.config()')
+    }
+
+    // Save to localStorage
+    localStorage.setItem('svgnest-config', JSON.stringify(config))
+    console.log('Saved to localStorage')
+    console.log('=====================')
+
+    if (onClose) onClose()
+  }
 
   if (!visible) return null
 
@@ -147,9 +177,9 @@ function Configuration({ visible, onSave, onClose }) {
                 </OverlayTrigger>
               </Form.Label>
               <Form.Control 
-                type="text" 
-                defaultValue="0" 
-                data-config="spacing"
+                type="number" 
+                value={config.spacing}
+                onChange={(e) => handleChange('spacing', parseFloat(e.target.value) || 0)}
                 style={styles.input}
               />
             </Form.Group>
@@ -168,9 +198,10 @@ function Configuration({ visible, onSave, onClose }) {
                 </OverlayTrigger>
               </Form.Label>
               <Form.Control 
-                type="text" 
-                defaultValue="0.3" 
-                data-config="curveTolerance"
+                type="number" 
+                step="0.1"
+                value={config.curveTolerance}
+                onChange={(e) => handleChange('curveTolerance', parseFloat(e.target.value) || 0.3)}
                 style={styles.input}
               />
             </Form.Group>
@@ -189,9 +220,9 @@ function Configuration({ visible, onSave, onClose }) {
                 </OverlayTrigger>
               </Form.Label>
               <Form.Control 
-                type="text" 
-                defaultValue="100000000" 
-                data-config="clipperScale"
+                type="number" 
+                value={config.clipperScale}
+                onChange={(e) => handleChange('clipperScale', parseInt(e.target.value) || 10000000)}
                 style={styles.input}
               />
             </Form.Group>
@@ -210,9 +241,9 @@ function Configuration({ visible, onSave, onClose }) {
                 </OverlayTrigger>
               </Form.Label>
               <Form.Control 
-                type="text" 
-                defaultValue="4" 
-                data-config="rotations"
+                type="number" 
+                value={config.rotations}
+                onChange={(e) => handleChange('rotations', parseInt(e.target.value) || 4)}
                 style={styles.input}
               />
             </Form.Group>
@@ -231,9 +262,9 @@ function Configuration({ visible, onSave, onClose }) {
                 </OverlayTrigger>
               </Form.Label>
               <Form.Control 
-                type="text" 
-                defaultValue="10" 
-                data-config="populationSize"
+                type="number" 
+                value={config.populationSize}
+                onChange={(e) => handleChange('populationSize', parseInt(e.target.value) || 10)}
                 style={styles.input}
               />
             </Form.Group>
@@ -252,24 +283,24 @@ function Configuration({ visible, onSave, onClose }) {
                 </OverlayTrigger>
               </Form.Label>
               <Form.Control 
-                type="text" 
-                defaultValue="10" 
-                data-config="mutationRate"
+                type="number" 
+                value={config.mutationRate}
+                onChange={(e) => handleChange('mutationRate', parseInt(e.target.value) || 10)}
                 style={styles.input}
               />
             </Form.Group>
 
-            <hr style={{ borderColor: '#475569', margin: '20px 0' }} />
+            <hr style={{ borderColor: '#dee2e6', margin: '20px 0' }} />
 
             {/* Part in Part */}
             <Form.Group className="mb-3">
               <div className="d-flex align-items-center gap-2">
                 <Form.Check 
                   type="checkbox" 
-                  data-config="useHoles"
+                  checked={config.useHoles}
+                  onChange={(e) => handleChange('useHoles', e.target.checked)}
                   id="useHoles"
                   label="Part in Part"
-                  style={{ color: '#e5e7eb' }}
                 />
                 <OverlayTrigger placement="right" overlay={tooltipInfo("Place parts in the holes of other parts")}>
                   <span style={{ 
@@ -287,10 +318,10 @@ function Configuration({ visible, onSave, onClose }) {
               <div className="d-flex align-items-center gap-2">
                 <Form.Check 
                   type="checkbox" 
-                  data-config="exploreConcave"
+                  checked={config.exploreConcave}
+                  onChange={(e) => handleChange('exploreConcave', e.target.checked)}
                   id="exploreConcave"
                   label="Explore concave areas"
-                  style={{ color: '#e5e7eb' }}
                 />
                 <OverlayTrigger placement="right" overlay={tooltipInfo("Try to solve for enclosed concave areas")}>
                   <span style={{ 
@@ -316,7 +347,7 @@ function Configuration({ visible, onSave, onClose }) {
           )}
           <Button 
             variant="primary" 
-            onClick={onSave}
+            onClick={handleSave}
             style={{
               background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               border: 'none',
