@@ -8,7 +8,8 @@ import {
   ZoomOut, 
   BoxArrowLeft,
   Grid3x3GapFill,
-  PencilSquare
+  PencilSquare,
+  Trash
 } from 'react-bootstrap-icons'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -44,6 +45,7 @@ function MainToolbar({
   nestingStarted,
   onStart,
   onDownload,
+  onClear,
   onConfigToggle,
   onToggleCustomBuilder,
   onZoomIn,
@@ -99,6 +101,24 @@ function MainToolbar({
           >
             <Download size={16} />
             <span style={{ marginLeft: '6px' }}>Download</span>
+          </Button>
+        </OverlayTrigger>
+
+        <OverlayTrigger
+          placement="bottom"
+          overlay={renderTooltip('Clear all shapes and results to start fresh')}
+        >
+          <Button
+            variant="outline-danger"
+            onClick={onClear}
+            disabled={!binSelected && !nestingStarted}
+            style={{
+              ...styles.button,
+              minWidth: '100px'
+            }}
+          >
+            <Trash size={16} />
+            <span style={{ marginLeft: '6px' }}>Clear</span>
           </Button>
         </OverlayTrigger>
       </ButtonGroup>

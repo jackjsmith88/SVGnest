@@ -55,7 +55,8 @@ function SVGNestReactParent() {
     startNest,
     stopNest,
     handleDownload,
-    attachSvgListeners
+    attachSvgListeners,
+    resetProgress
   } = useSVGNest()
 
   // Configuration hook
@@ -158,15 +159,68 @@ function SVGNestReactParent() {
   }
 
   const handleExit = () => {
+    console.log('handleExit: Starting cleanup and returning to splash')
+    
+    // Stop if working (following cleanup pattern)
+    if (isWorking) {
+      console.log('handleExit: Stopping running algorithm')
+      stopNest()
+    }
+    
+    // Reset progress
+    resetProgress()
+    
+    // Clear state
     setShowSplash(true)
     setBinSelected(false)
     setNestingStarted(false)
     setMessage('')
     setMessageClass('')
-    // Clear bins when exiting
+    
+    // Clear DOM containers
     if (binsRef.current) {
       binsRef.current.innerHTML = ''
     }
+    if (displayRef.current) {
+      displayRef.current.innerHTML = ''
+    }
+    
+    console.log('handleExit: Exit complete')
+  }
+
+  const handleClear = () => {
+    console.log('handleClear: Starting cleanup process')
+    
+    // Step 1: Stop if working (following cleanup pattern)
+    if (isWorking) {
+      console.log('handleClear: Stopping running algorithm')
+      stopNest()
+    }
+    
+    // Step 2: Reset progress panel and hook state
+    console.log('handleClear: Resetting progress')
+    resetProgress()
+    
+    // Step 3: Clear nesting state
+    setBinSelected(false)
+    setNestingStarted(false)
+    setCustomShapesLoaded(false)
+    
+    // Step 4: Clear DOM containers
+    if (binsRef.current) {
+      console.log('handleClear: Clearing bins container')
+      binsRef.current.innerHTML = ''
+    }
+    if (displayRef.current) {
+      console.log('handleClear: Clearing display container')
+      displayRef.current.innerHTML = ''
+    }
+    
+    // Step 5: Update user
+    setMessage('Cleared. Ready to load new shapes.')
+    setMessageClass(MESSAGE_TYPES.SUCCESS)
+    
+    console.log('handleClear: Cleanup complete')
   }
 
   return (
@@ -190,6 +244,7 @@ function SVGNestReactParent() {
           nestingStarted={nestingStarted}
           onStart={handleStart}
           onDownload={handleDownloadClick}
+          onClear={handleClear}
           onConfigToggle={toggleConfig}
           onToggleCustomBuilder={toggleCustomBuilder}
           onZoomIn={handleZoomIn}

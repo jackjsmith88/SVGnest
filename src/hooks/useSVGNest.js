@@ -244,6 +244,51 @@ export const useSVGNest = () => {
     }
   }, [])
 
+  const resetProgress = useCallback(() => {
+    // Reset state
+    setIsWorking(false)
+    setPrevPercent(0)
+    setStartTime(null)
+    setIterations(0)
+    setDownloadReady(false)
+    
+    // Reset best solution
+    bestSolutionRef.current = { bins: null, fitness: Infinity }
+    
+    // Clear progress panel UI
+    const progressBar = document.getElementById('info_progress_bar')
+    const timeDisplay = document.getElementById('info_time')
+    const iterationsDisplay = document.getElementById('info_iterations_display')
+    const efficiencyDisplay = document.getElementById('info_efficiency_display')
+    const placedDisplay = document.getElementById('info_placed_display')
+    const placementDisplay = document.getElementById('placement-display')
+    const infoPanel = document.getElementById('progress-panel')
+    
+    if (progressBar) {
+      progressBar.style.width = '0%'
+      progressBar.setAttribute('aria-valuenow', '0')
+    }
+    if (timeDisplay) {
+      timeDisplay.innerHTML = ''
+      timeDisplay.style.display = 'none'
+    }
+    if (iterationsDisplay) {
+      iterationsDisplay.innerHTML = '0'
+    }
+    if (efficiencyDisplay) {
+      efficiencyDisplay.innerHTML = '0'
+    }
+    if (placedDisplay) {
+      placedDisplay.innerHTML = '0/0'
+    }
+    if (placementDisplay) {
+      placementDisplay.style.display = 'none'
+    }
+    if (infoPanel) {
+      infoPanel.style.display = 'none'
+    }
+  }, [])
+
   return {
     // State
     isWorking,
@@ -262,6 +307,7 @@ export const useSVGNest = () => {
     handleDownload,
     attachSvgListeners,
     progress,
-    renderSvg
+    renderSvg,
+    resetProgress
   }
 }
