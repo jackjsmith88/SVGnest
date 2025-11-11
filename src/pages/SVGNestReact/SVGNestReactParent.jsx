@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import '../../styles/App.css'
 
 // Components
@@ -82,6 +82,16 @@ function SVGNestReactParent() {
     setBinSelected,
     attachSvgListeners
   })
+
+  // Cleanup on unmount - stop any running nesting operations
+  useEffect(() => {
+    return () => {
+      console.log('SVGNestReactParent: Cleaning up on unmount')
+      if (isWorking) {
+        stopNest()
+      }
+    }
+  }, [isWorking, stopNest])
 
   // Set initial message based on script loading
   React.useEffect(() => {

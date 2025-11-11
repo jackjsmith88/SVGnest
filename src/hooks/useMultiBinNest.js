@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { testMultiBinNestingIterative } from '../utils/multiBinNesting'
 
 /**
@@ -13,6 +13,18 @@ export const useMultiBinNest = () => {
 
   const workerRef = useRef(null)
   const stopRequested = useRef(false)
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('useMultiBinNest: Cleaning up on unmount')
+      if (workerRef.current) {
+        clearTimeout(workerRef.current)
+        workerRef.current = null
+      }
+      stopRequested.current = true
+    }
+  }, [])
 
   /**
    * Start the iterative nesting process

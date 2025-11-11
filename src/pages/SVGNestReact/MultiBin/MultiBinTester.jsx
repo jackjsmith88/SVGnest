@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import BinVisualizer from '../Components/Shared/BinVisualizer'
 import { createSimpleShapes, createRealisticCuttingScenario } from '../../../utils/multiBinNesting'
 import { createPerfectSingleBinTest, createInterlockingLShapesTest, createExactTwoBinsTest } from '../../../utils/testCases'
@@ -28,6 +28,20 @@ function MultiBinTester() {
   // Execution report tracking
   const [executionReport, setExecutionReport] = useState(null)
   const [reportCopied, setReportCopied] = useState(false)
+
+  // Ref to track if component is mounted
+  const isMountedRef = useRef(true)
+
+  // Cleanup on unmount - stop any running operations
+  useEffect(() => {
+    return () => {
+      console.log('MultiBinTester: Cleaning up on unmount')
+      isMountedRef.current = false
+      if (window.SvgNest && window.SvgNest.working) {
+        window.SvgNest.stop()
+      }
+    }
+  }, [])
 
   // Run multi-bin packing with SVGnest
   const handleStart = async () => {
@@ -214,12 +228,18 @@ function MultiBinTester() {
         detail: err.message
       })
       
-      setError(err.message)
-      setExecutionReport(report)
-      setStatusText(`Error: ${err.message}`)
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setError(err.message)
+        setExecutionReport(report)
+        setStatusText(`Error: ${err.message}`)
+      }
       console.error('Multi-bin packing error:', err)
     } finally {
-      setIsRunning(false)
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setIsRunning(false)
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { millisecondsToStr } from '../utils/helpers'
 
 export const useSVGNest = () => {
@@ -11,6 +11,16 @@ export const useSVGNest = () => {
 
   const displayRef = useRef(null)
   const binsRef = useRef(null)
+
+  // Cleanup on unmount or when component is no longer needed
+  useEffect(() => {
+    return () => {
+      console.log('useSVGNest: Cleaning up on unmount')
+      if (window.SvgNest && isWorking) {
+        window.SvgNest.stop()
+      }
+    }
+  }, [isWorking])
 
   // Define progress and renderSvg functions first
   const progress = useCallback((percent) => {
