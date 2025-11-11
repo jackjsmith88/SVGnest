@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import BinVisualizer from '../Components/Shared/BinVisualizer'
+import BinVisualizer from '../../SVGNestReact/Components/Shared/BinVisualizer'
 import { createSimpleShapes, createRealisticCuttingScenario } from '../../../utils/multiBinNesting'
 import { createPerfectSingleBinTest, createInterlockingLShapesTest, createExactTwoBinsTest } from '../../../utils/testCases'
 import { runMultiBinSVGNest } from '../../../utils/multiBinSVGNest'
-import '../Components/Shared/TopSolutions.css'
+import '../../SVGNestReact/Components//Shared/TopSolutions.css'
 
 function MultiBinTester() {
   const [binWidth, setBinWidth] = useState(400)

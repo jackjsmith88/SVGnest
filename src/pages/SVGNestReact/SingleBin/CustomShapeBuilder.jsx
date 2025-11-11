@@ -120,51 +120,48 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
   
   return (
     <Card 
-      bg="dark" 
-      text="light"
       style={{
         margin: '20px',
-        border: '1px solid rgba(148, 163, 184, 0.2)',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)'
+        border: '1px solid #ddd',
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        background: 'white'
       }}
     >
       <Card.Header style={{
-        background: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
-        borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+        background: 'linear-gradient(to bottom, white 0%, #f9f9f9 100%)',
+        borderBottom: '2px solid #4CAF50',
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        color: '#333',
+        padding: '10px 15px'
       }}
       onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <PencilSquare size={20} />
+        <PencilSquare size={18} color="#4CAF50" />
         <strong>Custom Shape Builder</strong>
-        <Badge bg="warning" text="dark" style={{ marginLeft: 'auto' }}>
+        <Badge bg="warning" text="dark" style={{ marginLeft: 'auto', fontSize: '12px' }}>
           {shapes.length} shapes
         </Badge>
         <Button 
           variant="link" 
           size="sm"
           style={{ 
-            color: '#94a3b8',
+            color: '#555',
             padding: '0',
             marginLeft: '8px'
           }}
         >
-          {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
         </Button>
       </Card.Header>
 
       <Collapse in={!isCollapsed}>
-        <div>
-          <Card.Body>
-            <div className="custom-shape-builder">
-      <h3>Custom Shape Builder</h3>
-      
-      <div className="main-content">
-        {/* Left Panel - Bin Config and Preview */}
-        <div className="left-panel">
+        <Card.Body className="custom-shape-builder" style={{ padding: '20px' }}>
+          <div className="main-content">
+            {/* Left Panel - Bin Config and Preview */}
+            <div className="left-panel">
           {/* Bin Configuration */}
           <div className="section">
             <h4>Bin Configuration</h4>
@@ -336,11 +333,9 @@ const CustomShapeBuilder = ({ onShapesGenerated }) => {
               Clear All
             </button>
           </div>
+          </div>
         </div>
-      </div>
-            </div>
-          </Card.Body>
-        </div>
+        </Card.Body>
       </Collapse>
     </Card>
   )

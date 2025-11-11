@@ -12,6 +12,29 @@ import {
 } from 'react-bootstrap-icons'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+// Unified professional styles
+const styles = {
+  toolbar: {
+    background: 'white',
+    borderBottom: '2px solid #4CAF50',
+    padding: '8px 20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000
+  },
+  button: {
+    fontSize: '14px',
+    fontWeight: '600',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    transition: 'all 0.3s'
+  }
+}
+
 function MainToolbar({
   isWorking,
   binSelected,
@@ -30,20 +53,9 @@ function MainToolbar({
   const renderTooltip = (text) => <Tooltip>{text}</Tooltip>
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-      borderBottom: '2px solid #dee2e6',
-      padding: '12px 20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000
-    }}>
+    <div style={styles.toolbar}>
       {/* Left: Primary Actions */}
-      <ButtonGroup>
+      <ButtonGroup size="sm">
         <OverlayTrigger
           placement="bottom"
           overlay={renderTooltip(isWorking ? 'Stop the nesting algorithm' : 'Start nesting shapes into bins')}
@@ -53,24 +65,20 @@ function MainToolbar({
             onClick={onStart}
             disabled={!isWorking && !binSelected}
             style={{
-              minWidth: '140px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: (!isWorking && binSelected) ? '0 0 15px rgba(34, 197, 94, 0.4)' : 'none',
-              animation: (!isWorking && binSelected) ? 'pulse 2s infinite' : 'none'
+              ...styles.button,
+              minWidth: '120px',
+              boxShadow: (!isWorking && binSelected) ? '0 0 10px rgba(34, 197, 94, 0.3)' : 'none'
             }}
           >
             {isWorking ? (
               <>
-                <StopFill size={18} />
-                Stop Nest
+                <StopFill size={16} />
+                <span style={{ marginLeft: '6px' }}>Stop Nest</span>
               </>
             ) : (
               <>
-                <PlayFill size={18} />
-                Start Nest
+                <PlayFill size={16} />
+                <span style={{ marginLeft: '6px' }}>Start Nest</span>
               </>
             )}
           </Button>
@@ -85,23 +93,19 @@ function MainToolbar({
             onClick={onDownload}
             disabled={!downloadReady}
             style={{
-              minWidth: '140px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: downloadReady ? '0 0 15px rgba(59, 130, 246, 0.4)' : 'none'
+              ...styles.button,
+              minWidth: '120px'
             }}
           >
-            <Download size={18} />
-            Download SVG
+            <Download size={16} />
+            <span style={{ marginLeft: '6px' }}>Download</span>
           </Button>
         </OverlayTrigger>
       </ButtonGroup>
 
       {/* Center: Shape Source Toggle */}
       {!nestingStarted && (
-        <ButtonGroup>
+        <ButtonGroup size="sm">
           <OverlayTrigger
             placement="bottom"
             overlay={renderTooltip('Use template shapes with multiplier')}
@@ -110,14 +114,12 @@ function MainToolbar({
               variant={!showCustomBuilder ? 'info' : 'outline-info'}
               onClick={() => !showCustomBuilder || onToggleCustomBuilder()}
               style={{
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                ...styles.button,
+                minWidth: '110px'
               }}
             >
-              <Grid3x3GapFill size={18} />
-              Shape Manager
+              <Grid3x3GapFill size={16} />
+              <span style={{ marginLeft: '6px' }}>Shapes</span>
             </Button>
           </OverlayTrigger>
 
@@ -129,21 +131,19 @@ function MainToolbar({
               variant={showCustomBuilder ? 'warning' : 'outline-warning'}
               onClick={() => showCustomBuilder || onToggleCustomBuilder()}
               style={{
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                ...styles.button,
+                minWidth: '110px'
               }}
             >
-              <PencilSquare size={18} />
-              Custom Builder
+              <PencilSquare size={16} />
+              <span style={{ marginLeft: '6px' }}>Builder</span>
             </Button>
           </OverlayTrigger>
         </ButtonGroup>
       )}
 
       {/* Right: Tool Actions */}
-      <ButtonGroup>
+      <ButtonGroup size="sm">
         <OverlayTrigger
           placement="bottom"
           overlay={renderTooltip('Configure algorithm settings')}
@@ -152,14 +152,10 @@ function MainToolbar({
             variant={configVisible ? 'secondary' : 'outline-secondary'}
             onClick={onConfigToggle}
             disabled={isWorking}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
+            style={styles.button}
           >
-            <GearFill size={18} />
-            Config
+            <GearFill size={16} />
+            <span style={{ marginLeft: '6px' }}>Config</span>
           </Button>
         </OverlayTrigger>
 
@@ -168,8 +164,9 @@ function MainToolbar({
             variant="outline-secondary"
             onClick={onZoomIn}
             disabled={isWorking}
+            style={styles.button}
           >
-            <ZoomIn size={18} />
+            <ZoomIn size={16} />
           </Button>
         </OverlayTrigger>
 
@@ -178,8 +175,9 @@ function MainToolbar({
             variant="outline-secondary"
             onClick={onZoomOut}
             disabled={isWorking}
+            style={styles.button}
           >
-            <ZoomOut size={18} />
+            <ZoomOut size={16} />
           </Button>
         </OverlayTrigger>
 
@@ -188,28 +186,15 @@ function MainToolbar({
             variant="outline-danger"
             onClick={onExit}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginLeft: '12px'
+              ...styles.button,
+              marginLeft: '8px'
             }}
           >
-            <BoxArrowLeft size={18} />
-            Exit
+            <BoxArrowLeft size={16} />
+            <span style={{ marginLeft: '6px' }}>Exit</span>
           </Button>
         </OverlayTrigger>
       </ButtonGroup>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% {
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 25px rgba(34, 197, 94, 0.6);
-          }
-        }
-      `}</style>
     </div>
   )
 }

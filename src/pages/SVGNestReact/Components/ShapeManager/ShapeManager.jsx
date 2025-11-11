@@ -3,6 +3,42 @@ import { Card, Form, Button, Row, Col, Badge, Collapse } from 'react-bootstrap'
 import { FileEarmarkArrowUp, Collection, DashCircle, PlusCircle, ChevronDown, ChevronUp } from 'react-bootstrap-icons'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+const styles = {
+  card: {
+    margin: '20px',
+    border: '1px solid #ddd',
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    background: 'white'
+  },
+  header: {
+    background: 'linear-gradient(to bottom, white 0%, #f9f9f9 100%)',
+    borderBottom: '2px solid #4CAF50',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    color: '#333',
+    padding: '10px 15px'
+  },
+  body: {
+    padding: '15px'
+  },
+  button: {
+    fontSize: '14px',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px'
+  },
+  multiplierButton: {
+    fontSize: '14px',
+    padding: '6px 12px',
+    borderRadius: '4px'
+  }
+}
+
 function ShapeManager({ onFileLoad, onDemoLoad }) {
   const [multiplier, setMultiplier] = useState(1)
   const [fileInputKey, setFileInputKey] = useState(Date.now())
@@ -34,28 +70,14 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
   const totalShapes = multiplier * 74
 
   return (
-    <Card 
-      style={{
-        margin: '20px',
-        border: '1px solid #ddd',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-        background: 'white'
-      }}
-    >
-      <Card.Header style={{
-        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-        borderBottom: '1px solid #ddd',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        cursor: 'pointer',
-        color: '#333'
-      }}
-      onClick={() => setIsCollapsed(!isCollapsed)}
+    <Card style={styles.card}>
+      <Card.Header 
+        style={styles.header}
+        onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <Collection size={20} color="#2196F3" />
+        <Collection size={18} color="#4CAF50" />
         <strong>Shape Manager</strong>
-        <Badge bg="primary" style={{ marginLeft: 'auto' }}>
+        <Badge bg="success" style={{ marginLeft: 'auto', fontSize: '12px' }}>
           {totalShapes} shapes
         </Badge>
         <Button 
@@ -67,12 +89,12 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
             marginLeft: '8px'
           }}
         >
-          {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
         </Button>
       </Card.Header>
 
       <Collapse in={!isCollapsed}>
-        <Card.Body style={{ background: '#f9f9f9' }}>
+        <Card.Body style={styles.body}>
           <Row className="g-3">
             {/* Multiplier Control */}
             <Col md={12}>
@@ -87,16 +109,16 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
                     size="sm"
                     onClick={() => handleMultiplierChange(multiplier - 1)}
                     disabled={multiplier <= 1}
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={styles.multiplierButton}
                   >
-                    <DashCircle size={16} />
+                    <DashCircle size={14} />
                   </Button>
                   <Badge 
                     bg="info" 
                     style={{ 
-                      fontSize: '16px', 
-                      minWidth: '50px',
-                      padding: '6px 12px'
+                      fontSize: '14px', 
+                      minWidth: '45px',
+                      padding: '5px 10px'
                     }}
                   >
                     {multiplier}x
@@ -106,9 +128,9 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
                     size="sm"
                     onClick={() => handleMultiplierChange(multiplier + 1)}
                     disabled={multiplier >= 10}
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={styles.multiplierButton}
                   >
-                    <PlusCircle size={16} />
+                    <PlusCircle size={14} />
                   </Button>
                 </div>
               </div>
@@ -166,20 +188,14 @@ function ShapeManager({ onFileLoad, onDemoLoad }) {
               Action
             </Form.Label>
             <Button
-              variant="primary"
+              variant="success"
               onClick={handleDemoClick}
               style={{
-                width: '100%',
-                border: 'none',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '10px'
+                ...styles.button,
+                width: '100%'
               }}
             >
-              <FileEarmarkArrowUp size={18} />
+              <FileEarmarkArrowUp size={16} />
               Load Demo ({multiplier}x)
             </Button>
           </Col>
