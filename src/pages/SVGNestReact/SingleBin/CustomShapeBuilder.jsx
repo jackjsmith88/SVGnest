@@ -52,7 +52,26 @@ const SHAPE_PRESETS = {
       { type: 'lshape', totalWidth: 60, totalHeight: 60, armWidth: 30, armHeight: 30, quantity: 2 },
       { type: 'lshape', totalWidth: 100, totalHeight: 100, armWidth: 50, armHeight: 50, quantity: 2 }
     ]
-  }
+  },
+    LSHAPE_8X_SMALL_RANDOM: {
+    name: '8× Random Small L-Shapes (30–50 × 20–30 cm)',
+    bin: 'SHEET_320x160',
+    shapes: Array.from({ length: 8 }, () => {
+      const totalWidth = Math.floor(Math.random() * (50 - 30 + 1)) + 30;
+      const totalHeight = Math.floor(Math.random() * (30 - 20 + 1)) + 20;
+      const armWidth = Math.floor(totalWidth / (1.8 + Math.random() * 0.4)); // ~half-ish
+      const armHeight = Math.floor(totalHeight / (1.8 + Math.random() * 0.4));
+      return {
+        type: 'lshape',
+        totalWidth,
+        totalHeight,
+        armWidth,
+        armHeight,
+        quantity: 1
+      };
+    })
+  },
+
 }
 
 const CustomShapeBuilder = ({ onShapesGenerated }) => {
