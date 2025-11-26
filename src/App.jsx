@@ -9,7 +9,7 @@ import Sidebar from './components/Layout/Sidebar'
 // Pages
 import Homepage from './pages/Homepage/Homepage'
 import SVGNestReactParent from './pages/SVGNestReact/SVGNestReactParent'
-import SVGNestTestingParent from './pages/SVGNestTesting/SVGNestTestingParent'
+import NestingWorkbenchPage from './pages/SVGNestReact/Workbench/NestingWorkbenchPage'
 
 function App() {
   return (
@@ -41,7 +41,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Homepage />} />
               <Route path="/svgnest" element={<SVGNestReactParent />} />
-              <Route path="/svgnest-testing" element={<SVGNestTestingParent />} />
+              <Route path="/workbench" element={<NestingWorkbenchPage />} />
             </Routes>
           </main>
         </div>

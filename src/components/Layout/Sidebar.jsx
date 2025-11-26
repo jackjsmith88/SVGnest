@@ -17,11 +17,11 @@ export default function Sidebar() {
       icon: '📐',
       description: 'Nest SVG shapes'
     },
-        { 
-      path: '/svgnest-testing', 
-      label: 'SVG Nest Testing', 
-      icon: '📐',
-      description: 'Test SVG nesting'
+    { 
+      path: '/workbench', 
+      label: 'Testing Workbench', 
+      icon: '🔬',
+      description: 'Custom shape testing'
     },
   ]
 

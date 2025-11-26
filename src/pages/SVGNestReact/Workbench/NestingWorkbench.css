@@ -1,0 +1,28 @@
+.nesting-workbench {
+  margin: 20px;
+}
+
+.nesting-workbench .card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nesting-workbench .font-monospace {
+  font-family: 'Courier New', monospace;
+}
+
+.nesting-workbench .table {
+  font-size: 0.9rem;
+}
+
+.nesting-workbench .table td {
+  vertical-align: middle;
+}
+
+.nesting-workbench .alert ul {
+  margin-bottom: 0;
+  padding-left: 1.5rem;
+}
+
+.nesting-workbench .alert li {
+  margin-bottom: 0.25rem;
+}
