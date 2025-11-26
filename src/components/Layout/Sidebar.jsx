@@ -23,6 +23,12 @@ export default function Sidebar() {
       icon: '🔬',
       description: 'Custom shape testing'
     },
+    { 
+      path: '/SVG-generator', 
+      label: 'SVG Generator', 
+      icon: '🎨',
+      description: 'Generate custom SVG shapes'
+    },
   ]
 
   return (

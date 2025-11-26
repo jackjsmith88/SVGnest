@@ -8,8 +8,9 @@ import Sidebar from './components/Layout/Sidebar'
 
 // Pages
 import Homepage from './pages/Homepage/Homepage'
-import SVGNestReactParent from './pages/SVGNestReact/SVGNestReactParent'
-import NestingWorkbenchPage from './pages/Workbench/NestingWorkbench'
+import SVGNestReactParent from "./pages/SVGNestReact/SVGNestReactParent";
+import NestingWorkbenchPage from "./pages/Workbench/NestingWorkbenchPage";
+import SVGGeneratorParent from "./pages/SVGGenerator/SVGGeneratorParent";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
               <Route path="/" element={<Homepage />} />
               <Route path="/svgnest" element={<SVGNestReactParent />} />
               <Route path="/workbench" element={<NestingWorkbenchPage />} />
+              <Route path="/SVG-generator" element={<SVGGeneratorParent />} />
             </Routes>
           </main>
         </div>
