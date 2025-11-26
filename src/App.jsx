@@ -9,7 +9,7 @@ import Sidebar from './components/Layout/Sidebar'
 // Pages
 import Homepage from './pages/Homepage/Homepage'
 import SVGNestReactParent from './pages/SVGNestReact/SVGNestReactParent'
-import NestingWorkbenchPage from './pages/SVGNestReact/Workbench/NestingWorkbenchPage'
+import NestingWorkbenchPage from './pages/Workbench/NestingWorkbench'
 
 function App() {
   return (

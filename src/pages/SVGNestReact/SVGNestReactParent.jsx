@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import '../../styles/App.css'
 
 // Components
-import SplashScreen from './Splash/SplashScreen'
+import SplashScreen from '../../pages/Splash/SplashScreen'
 import MainToolbar from './Components/Toolbar/MainToolbar'
 import Configuration from './SingleBin/Configuration'
 import ProgressPanel from './Components/Progress/ProgressPanel'

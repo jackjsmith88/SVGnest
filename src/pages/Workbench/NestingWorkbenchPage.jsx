@@ -1,22 +1,22 @@
 import React, { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import '../../../styles/App.css'
+import '../../styles/App.css'
 
 // Components
 import NestingWorkbench from './NestingWorkbench'
-import MainToolbar from '../Components/Toolbar/MainToolbar'
-import Configuration from '../SingleBin/Configuration'
-import ProgressPanel from '../Components/Progress/ProgressPanel'
-import SVGDisplay from '../SingleBin/SVGDisplay'
+import MainToolbar from '../SVGNestReact/Components/Toolbar/MainToolbar'
+import Configuration from '../SVGNestReact/SingleBin/Configuration'
+import ProgressPanel from '../SVGNestReact/Components/Progress/ProgressPanel'
+import SVGDisplay from '../SVGNestReact/SingleBin/SVGDisplay'
 
 // Hooks
-import { useScriptLoader } from '../../../hooks/useScriptLoader'
-import { useSVGNest } from '../../../hooks/useSVGNest'
-import { useSVGLoader } from '../../../hooks/useSVGLoader'
-import { useUIState } from '../../../hooks/useUIState'
+import { useScriptLoader } from '../../hooks/useScriptLoader'
+import { useSVGNest } from '../../hooks/useSVGNest'
+import { useSVGLoader } from '../../hooks/useSVGLoader'
+import { useUIState } from '../../hooks/useUIState'
 
 // Utils
-import { MESSAGE_TYPES } from '../../../utils/constants'
+import { MESSAGE_TYPES } from '../../utils/constants'
 
 function NestingWorkbenchPage() {
   const navigate = useNavigate()

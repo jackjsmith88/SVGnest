@@ -92,11 +92,11 @@ export class ShapeBuilder {
     // This ensures the visual size matches the geometric size for proper nesting
     const points = [
       { x: inset, y: inset },                      // 1. Top-left (outer corner)
-      { x: inset, y: h - inset },                  // 2. Bottom-left (outer corner)
-      { x: w - inset, y: h - inset },              // 3. Bottom-right (outer corner)
-      { x: w - inset, y: h - ah + inset },         // 4. Right edge of notch (inset from bottom)
-      { x: aw - inset, y: h - ah - inset },        // 5. Inner corner (ENLARGE cavity by subtracting inset)
-      { x: aw - inset, y: inset }                  // 6. Left edge of top arm (inset from right)
+      { x: aw - inset, y: inset },                  // 2. Top-right of bottom section
+      { x: aw - inset, y: h - ah - inset },         // 3. Inner corner (bottom of notch)
+      { x: w - inset, y: h - ah + inset },         // 4. Right edge of notch
+      { x: w - inset, y: h - inset },              // 5. Bottom-right (outer corner)
+      { x: inset, y: h - inset }                   // 6. Bottom-left (outer corner)
     ]
     
     // Calculate actual bounding box
@@ -211,7 +211,7 @@ export class ShapeBuilder {
   }
   
   /**
-   * Convert shape to SVG polygon element string with label
+   * Convert shape to SVG polygon element string
    * Stroke-compensated: polygon is inset so visual size matches actual dimensions
    */
   shapeToSVGPolygon(shape, offsetX = 0, offsetY = 0, index = 0) {
@@ -219,18 +219,8 @@ export class ShapeBuilder {
       .map(p => `${(p.x + offsetX).toFixed(2)},${(p.y + offsetY).toFixed(2)}`)
       .join(' ')
     
-    // Calculate bounding box from actual points
-    const minX = Math.min(...shape.points.map(p => p.x))
-    const maxX = Math.max(...shape.points.map(p => p.x))
-    const minY = Math.min(...shape.points.map(p => p.y))
-    const maxY = Math.max(...shape.points.map(p => p.y))
-    
-    // Calculate center from bounding box
-    const centerX = offsetX + (minX + maxX) / 2
-    const centerY = offsetY + (minY + maxY) / 2
-    
-    return `<polygon id="${shape.id}" points="${pointsStr}" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="${this.shapeStrokeWidth}"/>
-    <text x="${centerX.toFixed(2)}" y="${centerY.toFixed(2)}" font-size="24" font-weight="bold" fill="#1976D2" text-anchor="middle" dominant-baseline="middle">${index + 1}</text>`
+    // Simple polygon without text labels - SVGnest doesn't need them
+    return `<polygon id="${shape.id}" points="${pointsStr}" fill="none" stroke="#2196F3" stroke-width="${this.shapeStrokeWidth}"/>`
   }
   
   /**

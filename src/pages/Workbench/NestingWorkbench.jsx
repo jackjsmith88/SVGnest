@@ -4,7 +4,7 @@ import {
   Plus, Trash, PlayFill, ArrowCounterclockwise, 
   Save, Folder2Open, Rulers, Box 
 } from 'react-bootstrap-icons'
-import ShapeBuilder, { PRESETS } from '../../../utils/ShapeBuilder'
+import ShapeBuilder, { PRESETS } from '../../utils/ShapeBuilder'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './NestingWorkbench.css'
 
@@ -206,6 +206,7 @@ function NestingWorkbench({ onShapesGenerated }) {
     
     console.log(`Generated ${shapeObjects.length} shapes`)
     console.log('SVG dimensions:', `${builder.binWidthPx}px × ${builder.binHeightPx}px`)
+    console.log('First 500 chars of SVG:', svgString.substring(0, 500))
     console.log('=== END GENERATION ===')
 
     onShapesGenerated(svgString)
