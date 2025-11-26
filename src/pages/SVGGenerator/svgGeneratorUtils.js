@@ -251,6 +251,11 @@ export const generateShapePath = (shape, xOffset, yOffset, unit, dpi) => {
         cy + (dx * sin + dy * cos)
       ]
     })
+    
+    // Normalize rotated points to start from (0, 0)
+    const minX = Math.min(...points.map(p => p[0]))
+    const minY = Math.min(...points.map(p => p[1]))
+    points = points.map(([x, y]) => [x - minX, y - minY])
   }
 
   // Offset points
@@ -368,13 +373,8 @@ export const generateSVG = ({ shapes, binWidth, binHeight, unit, dpi }) => {
     const shapeHeightPx = getValueInPx(shape.height, unit, dpi)
     const bbox = getRotatedBoundingBox(shapeWidthPx, shapeHeightPx, shape.rotation || 0)
 
-    // Draw bounding box for debugging (optional, can be removed)
-    const debugBox = `  <!-- Debug: Bounding box for ${shape.type}${index + 1} -->
-  <rect x="${position.x - 2}" y="${position.y - 2}" width="${bbox.width + 4}" height="${bbox.height + 4}" fill="none" stroke="#ddd" stroke-width="1" stroke-dasharray="2,2" opacity="0.3"/>
-  `
-
     svgContent += `  <!-- ${shape.type}-Shape ${index + 1} (${shape.width}×${shape.height}${unit}${shape.rotation ? ', ' + shape.rotation + '°' : ''}) -->
-${debugBox}  <g id="${shape.type.toLowerCase()}shape${index + 1}">
+  <g id="${shape.type.toLowerCase()}shape${index + 1}">
     <polygon points="${points}" 
              fill="${fillColor}" stroke="${shape.color}" stroke-width="2"/>
     <text x="${position.x + shapeWidthPx / 2}" y="${position.y + shapeHeightPx / 2}" text-anchor="middle" fill="${shape.color}" font-size="12" font-weight="bold">${shape.type}${index + 1}</text>
